@@ -2,11 +2,14 @@ name := """akka-ladybugs-spray-ws"""
 
 version := "1.0"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.10.4"
 
-// Change this to another test framework if you prefer
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.6" % "test"
+resolvers += "spray repo" at "http://repo.spray.io"
 
-// Uncomment to use Akka
-//libraryDependencies += "com.typesafe.akka" % "akka-actor_2.11" % "2.3.3"
+libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "2.1.6" % "test",
+  "com.wandoulabs.akka" %% "spray-websocket" % "0.1.2",
+  "org.webjars" % "jquery" % "2.1.1"
+)
 
+Revolver.settings
