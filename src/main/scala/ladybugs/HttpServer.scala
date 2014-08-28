@@ -31,10 +31,7 @@ object HttpWorker {
 class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with websocket.WebSocketServerWorker {
   override def receive = handshaking orElse businessLogicNoWebSocket orElse closeLogic
 
-  val pinger = context.system.scheduler.schedule(500 milliseconds, 500 milliseconds) {
-    self ! Push("ping")
-  }
-
+  val pinger = context.system.scheduler.schedule(500 milliseconds, 500 milliseconds, self, Push("ping"))
 
   override def postStop(): Unit = {
     super.postStop()
