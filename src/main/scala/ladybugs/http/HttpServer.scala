@@ -1,15 +1,14 @@
-package ladybugs
+package ladybugs.http
 
 import akka.actor._
 import spray.can.websocket.FrameCommandFailed
-import spray.can.websocket.frame.{TextFrame, BinaryFrame}
-import spray.can.{websocket, Http}
+import spray.can.websocket.frame.TextFrame
+import spray.can.{Http, websocket}
 import spray.http.HttpRequest
 import spray.routing.HttpServiceActor
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext.Implicits.global
 
-final case class Push(msg: String)
+final case class PushWS(msg: String)
+final case class BroadcastWS(msg: String)
 
 object HttpServer {
   def props() = Props(classOf[HttpServer])
@@ -31,19 +30,17 @@ object HttpWorker {
 class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with websocket.WebSocketServerWorker {
   override def receive = handshaking orElse businessLogicNoWebSocket orElse closeLogic
 
-  val pinger = context.system.scheduler.schedule(500 milliseconds, 500 milliseconds, self, Push("ping"))
+  context.system.eventStream.subscribe(self, classOf[BroadcastWS])
 
   override def postStop(): Unit = {
     super.postStop()
-    pinger.cancel()
+    context.system.eventStream.unsubscribe(self)
   }
 
   def businessLogic: Receive = {
-    // just bounce frames back for Autobahn testsuite
-    case x @ (_: BinaryFrame | _: TextFrame) =>
-      sender() ! x
+    case PushWS(msg) => send(TextFrame(msg))
 
-    case Push(msg) => send(TextFrame(msg))
+    case BroadcastWS(msg) => send(TextFrame(msg))
 
     case x: FrameCommandFailed =>
       log.error("frame command failed", x)

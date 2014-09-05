@@ -13,7 +13,7 @@ var WS = (function () {
 
   function onMessage(e) {
     var data = e.data;
-    console.log("WS.onMessage data:", data);
+    //console.log("WS.onMessage data:", data);
     if (listenerFun) listenerFun(e.data);
   }
   function connect(url) {
@@ -43,19 +43,47 @@ var WS = (function () {
   };
 }());
 
+var LadybugHandler = (function () {
+
+  var positions = [];
+
+  function updatePosition(ladybug) {
+    //console.log("updatePosition(" + ladybug + ")");
+    var idx = _.findIndex(positions, function (obj) {
+      return obj.self === ladybug.self;
+    });
+
+    if (idx >= 0) {
+      positions[idx] = ladybug;
+    }
+    else {
+      idx = positions.length;
+      positions.push(ladybug);
+    }
+
+    var id = "pos" + idx;
+    var $elem = $("#" + id);
+    if ($elem.length == 0) {
+      $elem = $('<div class="ladybug" id="' + id + '"></div>').appendTo("body");
+    }
+    $elem.css({
+      "left": ladybug.x + "px",
+      "top": ladybug.y + "px"
+    });
+  }
+
+  return {
+    updatePosition: updatePosition
+  };
+}());
+
 $(function () {
-  console.log("hellllo");
-  var pings = 0;
 
   WS.connect("ws://localhost:8080/");
-  WS.send("helloo");
   WS.listener(function (message) {
-    if (message == "ping") {
-      $("#pings").text(++pings);
-    }
+    //console.log("message=", message);
+    var json = JSON.parse(message);
+    //console.log("json:", json);
+    LadybugHandler.updatePosition(json);
   });
-
-  setTimeout(function () {
-    WS.send("helloo2");
-  }, 100);
 });
