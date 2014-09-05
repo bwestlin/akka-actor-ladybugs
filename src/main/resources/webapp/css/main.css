@@ -1,3 +1,6 @@
+body {
+  background-image: url('/images/grass.png');
+}
 .ladybug {
   position: absolute;
   background-color: red;
