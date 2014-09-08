@@ -28,9 +28,11 @@ class Ladybug(var x: Double,
 
       sender() ! MovementRequest(x + direction.x * speed, y + direction.y * speed)
     }
-    case MovementRequestResponse(ok, request) if ok => {
-      x = request.x
-      y = request.y
+    case MovementRequestResponse(ok, request) => {
+      if (ok) {
+        x = request.x
+        y = request.y
+      }
 
       context.system.eventStream.publish(Movement(self, x, y, direction.angle * -180 / Math.PI))
     }

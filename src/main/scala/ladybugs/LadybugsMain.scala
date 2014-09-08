@@ -19,11 +19,14 @@ object LadybugsMain extends App {
 
     IO(UHttp) ! Http.Bind(server, "localhost", 8080)
 
+    val arenaWidth = 800
+    val arenaHeight = 600
+
     val ladybugs = for (i <- (0 to 10).toSeq) yield {
-      system.actorOf(Ladybug.props(Random.nextInt(400), Random.nextInt(400)), s"ladybug$i")
+      system.actorOf(Ladybug.props(Random.nextInt(arenaWidth), Random.nextInt(arenaHeight)), s"ladybug$i")
     }
     println(s"ladybugs=$ladybugs")
-    val arena = system.actorOf(LadybugArena.props(400, 400, ladybugs), "arena")
+    val arena = system.actorOf(LadybugArena.props(arenaWidth, arenaHeight, ladybugs), "arena")
 
     val updater = system.actorOf(LadybygWebsocketUpdater.props(), "updater")
 

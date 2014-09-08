@@ -30,7 +30,7 @@ class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef])
       ladybugs.foreach(_ ! TimeToMove())
     }
     case r @ MovementRequest(x, y) => {
-      val ok = true //x >= 0 && y >= 0 && x < width && y < height
+      val ok = x >= 0 && y >= 0 && x < width && y < height
       sender() ! MovementRequestResponse(ok, r)
     }
   }

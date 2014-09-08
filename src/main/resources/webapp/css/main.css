@@ -3,7 +3,22 @@ body {
 }
 .ladybug {
   position: absolute;
-  background-color: red;
-  width: 10px;
-  height: 10px;
+  xbackground-color: red;
+  width: 40px;
+  height: 40px;
+  background-position: 0px 0px;
 }
+
+.ladybug:before {
+  content: "";
+  position: absolute;
+  left: -50%;
+  top: -50%;
+  width: 40px;
+  height: 40px;
+  xbackground-color: blue;
+  background-image: url('/images/ladybug_adult_male.png');
+  background-repeat: no-repeat;
+  background-position: inherit;
+}
+
