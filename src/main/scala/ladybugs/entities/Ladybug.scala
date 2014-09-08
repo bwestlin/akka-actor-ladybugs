@@ -22,7 +22,7 @@ class Ladybug(var x: Double,
   def receive = {
     case TimeToMove() => {
       val maxAngle = 8
-      val angleRadian = (Random.nextInt(maxAngle * 2 + 1) - maxAngle) * Math.PI / 180
+      val angleRadian = (Random.nextDouble() - 0.5) * 2 * maxAngle * Math.PI / 180
       direction = direction.rotate(angleRadian).normalised
       val speed = 2
 
