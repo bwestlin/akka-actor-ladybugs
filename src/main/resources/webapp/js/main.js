@@ -66,10 +66,12 @@ var LadybugHandler = (function () {
     if ($elem.length == 0) {
       $elem = $('<div class="ladybug" id="' + id + '"></div>').appendTo("body");
     }
-    $elem.css({
-      "left": ladybug.x + "px",
-      "top": ladybug.y + "px"
-    });
+    $elem
+      .css({
+        "left": ladybug.x + "px",
+        "top": ladybug.y + "px"
+      })
+      .text(parseInt(ladybug.angle));
   }
 
   return {

@@ -9,5 +9,5 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def read(json: JsValue): ActorRef = ???
     override def write(obj: ActorRef): JsValue = JsString(obj.toString())
   }
-  implicit val movementFormat = jsonFormat3(Movement)
+  implicit val movementFormat = jsonFormat4(Movement)
 }

@@ -7,10 +7,10 @@ import scala.concurrent.duration._
 object LadybugArena {
   def props(width: Int, height: Int, ladybugs: Seq[ActorRef]) = Props(classOf[LadybugArena], width, height, ladybugs)
 
-  case class Spawn(x: Int, y: Int)
+  case class Spawn(x: Double, y: Double)
   case class InitiateMovement()
   case class TimeToMove()
-  case class MovementRequest(x: Int, y: Int)
+  case class MovementRequest(x: Double, y: Double)
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest)
 }
 

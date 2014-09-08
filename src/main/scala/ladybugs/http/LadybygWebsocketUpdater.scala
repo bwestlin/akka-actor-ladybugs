@@ -20,7 +20,7 @@ class LadybygWebsocketUpdater extends Actor with ActorLogging {
   }
 
   def receive = {
-    case m @ Movement(ladybug, x, y) => {
+    case m: Movement => {
       context.system.eventStream.publish(BroadcastWS(m.toJson.toString()))
     }
   }
