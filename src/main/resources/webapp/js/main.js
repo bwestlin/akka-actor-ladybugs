@@ -100,7 +100,7 @@ var LadybugHandler = (function () {
 
 $(function () {
 
-  WS.connect("ws://localhost:8080/");
+  WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
   WS.listener(function (message) {
     //console.log("message=", message);
     var json = JSON.parse(message);
