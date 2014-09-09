@@ -1,3 +1,6 @@
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
+
 name := """akka-ladybugs-spray-ws"""
 
 version := "1.0"
@@ -15,3 +18,5 @@ libraryDependencies ++= Seq(
 )
 
 Revolver.settings
+
+packageArchetype.java_application

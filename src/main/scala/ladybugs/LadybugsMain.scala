@@ -18,7 +18,9 @@ object LadybugsMain extends App {
 
     val server = system.actorOf(HttpServer.props(), "http")
 
-    IO(UHttp) ! Http.Bind(server, "localhost", 8080)
+    val port = Option(System.getProperty("http.port")).map(_.toInt).getOrElse(8080)
+
+    IO(UHttp) ! Http.Bind(server, "localhost", port)
 
     val arenaWidth = 800
     val arenaHeight = 600

@@ -1,0 +1,1 @@
+web: target/universal/stage/bin/akka-ladybugs-spray-ws -Dhttp.port=$PORT $JAVA_OPTS
