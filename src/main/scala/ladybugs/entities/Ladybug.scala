@@ -8,7 +8,7 @@ import scala.util.Random
 object Ladybug {
   case class Movement(self: ActorRef, x: Double, y: Double, angle: Double)
 
-  def props(x: Double, y: Double, direction: Vec2d = Vec2d(1, 0)) = Props(classOf[Ladybug], x, y, direction)
+  def props(x: Double, y: Double, direction: Vec2d) = Props(classOf[Ladybug], x, y, direction)
 
 }
 
