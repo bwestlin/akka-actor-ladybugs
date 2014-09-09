@@ -57,7 +57,10 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
           getFromResourceDirectory("META-INF/resources/webjars")
         }
       } ~
-      getFromResourceDirectory("webapp")
+      getFromResourceDirectory("webapp") ~
+      path("") {
+        getFromResource("webapp/index.html")
+      }
     }
   }
 }
