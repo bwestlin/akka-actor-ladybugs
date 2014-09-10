@@ -5,16 +5,21 @@ import ladybugs.calculation.Vec2d
 
 import scala.util.Random
 
+case class LadybugState(x: Double,
+                        y: Double,
+                        direction: Vec2d)
+
 object Ladybug {
   case class Movement(self: ActorRef, x: Double, y: Double, angle: Double)
 
-  def props(x: Double, y: Double, direction: Vec2d) = Props(classOf[Ladybug], x, y, direction)
+  def props(x: Double, y: Double, direction: Vec2d) = {
+    val state = LadybugState(x, y, direction)
+    Props(classOf[Ladybug], state)
+  }
 
 }
 
-class Ladybug(var x: Double,
-              var y: Double,
-              var direction: Vec2d) extends Actor with ActorLogging {
+class Ladybug(var state: LadybugState) extends Actor with ActorLogging {
 
   import Ladybug._
   import LadybugArena._
@@ -23,18 +28,20 @@ class Ladybug(var x: Double,
     case TimeToMove() => {
       val maxAngle = 8
       val angleRadian = (Random.nextDouble() - 0.5) * 2 * maxAngle * Math.PI / 180
-      direction = direction.rotate(angleRadian).normalised
+      state = state.copy(direction = state.direction.rotate(angleRadian).normalised)
       val speed = 2
 
-      sender() ! MovementRequest(x + direction.x * speed, y + direction.y * speed)
+      sender() ! MovementRequest(
+        state.x + state.direction.x * speed,
+        state.y + state.direction.y * speed
+      )
     }
     case MovementRequestResponse(ok, request) => {
       if (ok) {
-        x = request.x
-        y = request.y
+        state = state.copy(x = request.x, y = request.y)
       }
 
-      context.system.eventStream.publish(Movement(self, x, y, direction.angle * -180 / Math.PI))
+      context.system.eventStream.publish(Movement(self, state.x, state.y, state.direction.angle * -180 / Math.PI))
     }
   }
 }
