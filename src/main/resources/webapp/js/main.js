@@ -73,7 +73,7 @@ var LadybugHandler = (function () {
     var id = "pos" + idx;
     var $elem = $("#" + id);
     if ($elem.length == 0) {
-      $elem = $('<div class="ladybug" id="' + id + '"></div>').appendTo("body");
+      $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("body");
     }
 
     var angle = bounded(parseInt(ladybug.state.directionAngle) * -1, 360);

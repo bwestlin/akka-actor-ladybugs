@@ -2,14 +2,21 @@ package ladybugs.entities
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ladybugs.calculation.Vec2d
-
+import ladybugs.entities.Gender.Gender
 import scala.util.Random
+
+object Gender extends Enumeration {
+  type Gender = Value
+  val male, female = Value
+  def random = if (Random.nextBoolean()) male else female
+}
 
 case class LadybugState(x: Double,
                         y: Double,
                         directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
-                        age: Double = 0)
+                        age: Double = 0,
+                        gender: Gender = Gender.random)
 
 object Ladybug {
   case class Movement(self: ActorRef, state: LadybugState)

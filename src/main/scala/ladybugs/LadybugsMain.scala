@@ -32,7 +32,6 @@ object LadybugsMain extends App {
       )
       system.actorOf(props, s"ladybug$i")
     }
-    println(s"ladybugs=$ladybugs")
     val arena = system.actorOf(LadybugArena.props(arenaWidth, arenaHeight, ladybugs), "arena")
 
     val updater = system.actorOf(LadybygWebsocketUpdater.props(), "updater")

@@ -17,8 +17,14 @@ body {
   width: 40px;
   height: 40px;
   xbackground-color: blue;
-  background-image: url('/images/ladybug_adult_male.png');
   background-repeat: no-repeat;
   background-position: inherit;
 }
 
+.ladybug.male:before {
+  background-image: url('/images/ladybug_adult_male.png');
+}
+
+.ladybug.female:before {
+  background-image: url('/images/ladybug_adult_female.png');
+}
