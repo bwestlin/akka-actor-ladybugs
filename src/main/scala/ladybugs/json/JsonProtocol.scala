@@ -1,5 +1,6 @@
 package ladybugs.json
 
+import ladybugs.entities.LadybugState
 import spray.json._
 import ladybugs.entities.Ladybug.Movement
 import akka.actor.ActorRef
@@ -9,5 +10,6 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def read(json: JsValue): ActorRef = ???
     override def write(obj: ActorRef): JsValue = JsString(obj.toString())
   }
-  implicit val movementFormat = jsonFormat4(Movement)
+  implicit val ladybugStateFormat = jsonFormat5(LadybugState)
+  implicit val movementFormat = jsonFormat2(Movement)
 }

@@ -4,8 +4,8 @@ body {
 .ladybug {
   position: absolute;
   xbackground-color: red;
-  width: 40px;
-  height: 40px;
+  width: 0px;
+  height: 0px;
   background-position: 0px 0px;
 }
 

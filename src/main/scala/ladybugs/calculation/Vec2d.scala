@@ -27,3 +27,11 @@ case class Vec2d(x: Double, y: Double) {
   def angle = Math.atan2(y, x)
 
 }
+
+object Vec2d {
+
+  val right = Vec2d(1, 0)
+  val up    = Vec2d(0, -1)
+  val left  = Vec2d(-1, 0)
+  val down  = Vec2d(0, 1)
+}

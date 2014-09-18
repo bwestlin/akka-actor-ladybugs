@@ -7,13 +7,15 @@ import scala.util.Random
 
 case class LadybugState(x: Double,
                         y: Double,
-                        direction: Vec2d)
+                        directionAngle: Double = Random.nextDouble() * 360,
+                        turningAngle: Double = 0,
+                        age: Double = 0)
 
 object Ladybug {
-  case class Movement(self: ActorRef, x: Double, y: Double, angle: Double)
+  case class Movement(self: ActorRef, state: LadybugState)
 
-  def props(x: Double, y: Double, direction: Vec2d) = {
-    val state = LadybugState(x, y, direction)
+  def props(x: Double, y: Double) = {
+    val state = LadybugState(x, y)
     Props(classOf[Ladybug], state)
   }
 
@@ -26,25 +28,52 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
 
   override def receive = alive(initialState)
 
+  def calculateNextTurningAngle(turningAngle: Double) = {
+    val maxAngle = 3
+    val angleAdjustment = (Random.nextDouble() - 0.5) * 1
+    val nextTurningAngle = turningAngle + angleAdjustment
+    Math.signum(nextTurningAngle) * Math.min(Math.abs(nextTurningAngle), maxAngle)
+  }
+
+  def calculateNextMovement(state: LadybugState) = {
+    val nextTurningAngle = calculateNextTurningAngle(state.turningAngle)
+    val nextDirectionAngle = state.directionAngle + nextTurningAngle
+
+    val angleRadian = nextDirectionAngle * Math.PI / 180
+
+    val nextDirection = Vec2d.right.rotate(angleRadian).normalised
+
+    val speed = 2
+    val nextX = state.x + nextDirection.x * speed
+    val nextY = state.y + nextDirection.y * speed
+
+
+    val nextState = state.copy(
+      directionAngle = nextDirectionAngle,
+      turningAngle = nextTurningAngle,
+      age = state.age + 1
+    )
+
+    (nextState, nextX, nextY)
+  }
+
+  def advanceState(state: LadybugState) = {
+    context.become(alive(state))
+  }
+
   def alive(state: LadybugState): Receive = {
     case TimeToMove() => {
-      val maxAngle = 8
-      val angleRadian = (Random.nextDouble() - 0.5) * 2 * maxAngle * Math.PI / 180
-      val nextState = state.copy(direction = state.direction.rotate(angleRadian).normalised)
-      val speed = 2
+      val (nextState, nextX, nextY) = calculateNextMovement(state)
 
-      sender() ! MovementRequest(
-        state.x + state.direction.x * speed,
-        state.y + state.direction.y * speed
-      )
-      context.become(alive(nextState))
+      sender() ! MovementRequest(nextX, nextY)
+      advanceState(nextState)
     }
     case MovementRequestResponse(ok, request) => {
       if (ok) {
-        context.become(alive(state.copy(x = request.x, y = request.y)))
+        advanceState(state.copy(x = request.x, y = request.y))
       }
 
-      context.system.eventStream.publish(Movement(self, state.x, state.y, state.direction.angle * -180 / Math.PI))
+      context.system.eventStream.publish(Movement(self, state))
     }
   }
 }

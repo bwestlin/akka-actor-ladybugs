@@ -49,6 +49,13 @@ var LadybugHandler = (function () {
   var animStep = 0;
   var animSleep = 100;
 
+  function bounded(value, bounds) {
+    if (value < 0) {
+      value = (value % bounds) + bounds;
+    }
+    return value % bounds;
+  }
+
   function updatePosition(ladybug) {
     //console.log("updatePosition(" + ladybug + ")");
     var idx = _.findIndex(positions, function (obj) {
@@ -69,10 +76,9 @@ var LadybugHandler = (function () {
       $elem = $('<div class="ladybug" id="' + id + '"></div>').appendTo("body");
     }
 
-    var angle = parseInt(ladybug.angle);
-    var angleSign = angle > 0 ? 1 : -1;
+    var angle = bounded(parseInt(ladybug.state.directionAngle) * -1, 360);
     var degreesPerImageStep = 360 / 32;
-    var rotateImageStep = parseInt((angle + (angleSign * degreesPerImageStep / 2)) / degreesPerImageStep);
+    var rotateImageStep = parseInt((angle + (degreesPerImageStep / 2)) / degreesPerImageStep) % 32;
     var bgPosX = rotateImageStep * 40 * -1;
     if (bgPosX > 0) bgPosX -= 1280;
     //console.log("angle=" + angle + ", rotateImageStep=" + rotateImageStep + ", bgPosX=" + bgPosX + ", degreesPerImageStep=" + degreesPerImageStep);
@@ -80,8 +86,8 @@ var LadybugHandler = (function () {
 
     $elem
       .css({
-        "left": ladybug.x + "px",
-        "top": ladybug.y + "px",
+        "left": parseInt(ladybug.state.x) + "px",
+        "top":  parseInt(ladybug.state.y) + "px",
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
       /*.text(angle)*/;
@@ -109,19 +115,20 @@ $(function () {
   });
 
   /*
-  var _angle = -180;
+  var _angle = 0;
   var f = function () {
     LadybugHandler.updatePosition({
       "self": "self",
-      "x": 100,
-      "y": 100,
-      "angle": _angle
+      "state": {
+        "x": 100,
+        "y": 100,
+        "directionAngle": _angle
+      }
     });
     _angle += 1
-    if (_angle > 360) _angle -= 360;
 
-    setTimeout(f, 100);
+    setTimeout(f, 500);
   };
-  setTimeout(f, 100);
+  setTimeout(f, 500);
   */
 });

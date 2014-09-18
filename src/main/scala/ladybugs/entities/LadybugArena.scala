@@ -18,7 +18,9 @@ class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef])
 
   import LadybugArena._
 
-  val mover = context.system.scheduler.schedule(100 milliseconds, 100 milliseconds, self, InitiateMovement())
+  val movementInterval = 100 milliseconds
+
+  val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
 
   override def postStop(): Unit = {
     super.postStop()

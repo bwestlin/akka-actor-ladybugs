@@ -28,8 +28,7 @@ object LadybugsMain extends App {
     val ladybugs = for (i <- (0 to 10).toSeq) yield {
       val props = Ladybug.props(
         Random.nextInt(arenaWidth),
-        Random.nextInt(arenaHeight),
-        Vec2d(1, 0).rotate(Random.nextDouble() * Math.PI)
+        Random.nextInt(arenaHeight)
       )
       system.actorOf(props, s"ladybug$i")
     }
