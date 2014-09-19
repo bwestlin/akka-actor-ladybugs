@@ -70,6 +70,10 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     state
   }
 
+  def handleMovement(state: LadybugState, x: Double, y: Double): LadybugState = {
+    state.copy(x = x, y = y, blocked = false)
+  }
+
   def handleBlocked(state: LadybugState): LadybugState = {
     if (!state.blocked) {
       val newTurningAngle = (if (Random.nextBoolean()) 1 else -1) * 5d
@@ -89,12 +93,10 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     }
     case MovementRequestResponse(ok, request) => {
       val newState =
-        if (ok) {
-          advanceState(state.copy(x = request.x, y = request.y, blocked = false))
-        }
-        else {
-          handleBlocked(state)
-        }
+        if (ok) handleMovement(state, request.x, request.y)
+        else handleBlocked(state)
+
+      advanceState(newState)
 
       context.system.eventStream.publish(Movement(self, newState))
     }
