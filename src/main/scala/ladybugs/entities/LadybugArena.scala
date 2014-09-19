@@ -10,7 +10,7 @@ object LadybugArena {
   case class Spawn(x: Double, y: Double)
   case class InitiateMovement()
   case class LetsMove()
-  case class MovementRequest(x: Double, y: Double)
+  case class MovementRequest(x: Double, y: Double, radius: Double)
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest)
 }
 
@@ -27,12 +27,17 @@ class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef])
     mover.cancel()
   }
 
+  def movementWithinBounds(x: Double, y: Double, radius: Double) = {
+    x >= radius && y >= radius && x < width - radius && y < height - radius
+  }
+
   def receive = {
     case InitiateMovement() => {
       ladybugs.foreach(_ ! LetsMove())
     }
-    case r @ MovementRequest(x, y) => {
-      val ok = x >= 0 && y >= 0 && x < width && y < height
+    case r @ MovementRequest(x, y, radius) => {
+      val ok = movementWithinBounds(x, y, radius)
+
       sender() ! MovementRequestResponse(ok, r)
     }
   }

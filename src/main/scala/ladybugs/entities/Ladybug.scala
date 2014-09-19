@@ -39,7 +39,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
   def calculateNextTurningAngle(turningAngle: Double) = {
     val maxAngle = 3
     val angleAdjustment = (Random.nextDouble() - 0.5) * 1
-    val nextTurningAngle = turningAngle + angleAdjustment
+    val nextTurningAngle = (turningAngle - turningAngle / 50) + angleAdjustment
     Math.signum(nextTurningAngle) * Math.min(Math.abs(nextTurningAngle), maxAngle)
   }
 
@@ -51,7 +51,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
 
     val nextDirection = Vec2d.right.rotate(angleRadian).normalised
 
-    val speed = 2
+    val speed = 3
     val nextX = state.x + nextDirection.x * speed
     val nextY = state.y + nextDirection.y * speed
 
@@ -63,6 +63,10 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     )
 
     (nextState, nextX, nextY)
+  }
+
+  def radius(state: LadybugState): Double = {
+    20
   }
 
   def advanceState(state: LadybugState): LadybugState = {
@@ -88,7 +92,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     case LetsMove() => {
       val (nextState, nextX, nextY) = calculateNextMovement(state)
 
-      sender() ! MovementRequest(nextX, nextY)
+      sender() ! MovementRequest(nextX, nextY, radius(state))
       advanceState(nextState)
     }
     case MovementRequestResponse(ok, request) => {
