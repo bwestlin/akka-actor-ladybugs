@@ -25,7 +25,7 @@ object LadybugsMain extends App {
     val arenaWidth = 800
     val arenaHeight = 600
 
-    val ladybugs = for (i <- (0 to 10).toSeq) yield {
+    val ladybugs = for (i <- (1 to 10).toSeq) yield {
       val props = Ladybug.props(
         Random.nextInt(arenaWidth),
         Random.nextInt(arenaHeight)
