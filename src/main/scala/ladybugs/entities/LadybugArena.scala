@@ -9,7 +9,7 @@ object LadybugArena {
 
   case class Spawn(x: Double, y: Double)
   case class InitiateMovement()
-  case class TimeToMove()
+  case class LetsMove()
   case class MovementRequest(x: Double, y: Double)
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest)
 }
@@ -29,7 +29,7 @@ class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef])
 
   def receive = {
     case InitiateMovement() => {
-      ladybugs.foreach(_ ! TimeToMove())
+      ladybugs.foreach(_ ! LetsMove())
     }
     case r @ MovementRequest(x, y) => {
       val ok = x >= 0 && y >= 0 && x < width && y < height

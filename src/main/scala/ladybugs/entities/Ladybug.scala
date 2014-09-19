@@ -15,6 +15,7 @@ case class LadybugState(x: Double,
                         y: Double,
                         directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
+                        blocked: Boolean = false,
                         age: Double = 0,
                         gender: Gender = Gender.random)
 
@@ -43,7 +44,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
   }
 
   def calculateNextMovement(state: LadybugState) = {
-    val nextTurningAngle = calculateNextTurningAngle(state.turningAngle)
+    val nextTurningAngle = if (!state.blocked) calculateNextTurningAngle(state.turningAngle) else state.turningAngle
     val nextDirectionAngle = state.directionAngle + nextTurningAngle
 
     val angleRadian = nextDirectionAngle * Math.PI / 180
@@ -64,23 +65,38 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     (nextState, nextX, nextY)
   }
 
-  def advanceState(state: LadybugState) = {
+  def advanceState(state: LadybugState): LadybugState = {
     context.become(alive(state))
+    state
+  }
+
+  def handleBlocked(state: LadybugState): LadybugState = {
+    if (!state.blocked) {
+      val newTurningAngle = (if (Random.nextBoolean()) 1 else -1) * 5d
+      state.copy(turningAngle = newTurningAngle, blocked = true)
+    }
+    else {
+      state
+    }
   }
 
   def alive(state: LadybugState): Receive = {
-    case TimeToMove() => {
+    case LetsMove() => {
       val (nextState, nextX, nextY) = calculateNextMovement(state)
 
       sender() ! MovementRequest(nextX, nextY)
       advanceState(nextState)
     }
     case MovementRequestResponse(ok, request) => {
-      if (ok) {
-        advanceState(state.copy(x = request.x, y = request.y))
-      }
+      val newState =
+        if (ok) {
+          advanceState(state.copy(x = request.x, y = request.y, blocked = false))
+        }
+        else {
+          handleBlocked(state)
+        }
 
-      context.system.eventStream.publish(Movement(self, state))
+      context.system.eventStream.publish(Movement(self, newState))
     }
   }
 }

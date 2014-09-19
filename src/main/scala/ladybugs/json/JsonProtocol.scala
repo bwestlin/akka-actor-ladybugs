@@ -16,6 +16,6 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def write(gender: Gender.Value): JsValue = JsString(gender.toString)
   }
 
-  implicit val ladybugStateFormat = jsonFormat6(LadybugState)
+  implicit val ladybugStateFormat = jsonFormat7(LadybugState)
   implicit val movementFormat = jsonFormat2(Movement)
 }
