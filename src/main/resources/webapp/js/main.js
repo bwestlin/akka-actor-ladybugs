@@ -3,7 +3,7 @@ var WS = (function () {
 
   var ws, isOpen = false;
   var pendingMessages = [];
-  var listenerFun;
+  var listeners = [];
 
   function onOpen(e) {
     console.log("WS.onOpen");
@@ -14,7 +14,7 @@ var WS = (function () {
   function onMessage(e) {
     var data = e.data;
     //console.log("WS.onMessage data:", data);
-    if (listenerFun) listenerFun(e.data);
+    for (var i in listeners) listeners[i](e.data);
   }
   function connect(url) {
     ws = new WebSocket(url);
@@ -32,7 +32,7 @@ var WS = (function () {
   }
 
   function listener(f) {
-    listenerFun = f;
+    listeners.push(f);
   }
 
   return {
@@ -42,6 +42,30 @@ var WS = (function () {
     listener: listener
   };
 }());
+
+var InvokeCounter = (function () {
+
+  function counterFunction(intervalMillisec, callback) {
+    var counter = 0;
+
+    function intervalEnded() {
+      callback(counter);
+      counter = 0;
+      setTimeout(intervalEnded, intervalMillisec);
+    }
+    setTimeout(intervalEnded, intervalMillisec);
+
+    return function () {
+      counter++;
+    }
+  }
+
+  return {
+    counterFunction: counterFunction
+  };
+}());
+
+
 
 var LadybugHandler = (function () {
 
@@ -113,6 +137,10 @@ $(function () {
     //console.log("json:", json);
     LadybugHandler.updatePosition(json);
   });
+
+  WS.listener(InvokeCounter.counterFunction(1000, function (count) {
+    $("#msgsPerSec").text(count + " msgs/s");
+  }));
 
   /*
   var _angle = 0;

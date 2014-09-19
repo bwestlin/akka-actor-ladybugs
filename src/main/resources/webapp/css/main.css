@@ -28,3 +28,11 @@ body {
 .ladybug.female:before {
   background-image: url('/images/ladybug_adult_female.png');
 }
+
+#msgsPerSec {
+  background-color: black;
+  opacity: 0.5;
+  color: white;
+  font-weight: bold;
+  display: inline-block;
+}
