@@ -34,6 +34,20 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     p.x >= p.radius && p.y >= p.radius && p.x < width - p.radius && p.y < height - p.radius
   }
 
+  def adjustPositionWithinBounds(p: LadybugPosition) = {
+    val x =
+      if (p.x - p.radius < 0) p.radius
+      else if (p.x + p.radius >= width) width - p.radius
+      else p.x
+
+    val y =
+      if (p.y - p.radius < 0) p.radius
+      else if (p.y + p.radius >= height) height - p.radius
+      else p.y
+
+    p.copy(x, y, p.radius)
+  }
+
   def receive = default(Map.empty)
 
   def default(ladybugs: Map[ActorRef, LadybugPosition]): Receive = {
@@ -61,9 +75,11 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         Random.nextInt(height)
       ))
 
+      val withinBoundsPosition = adjustPositionWithinBounds(position)
+
       val ladybug = context.system.actorOf(Ladybug.props(), s"ladybug${ladybugs.size}")
 
-      context.become(this.default(ladybugs + (ladybug -> position)))
+      context.become(this.default(ladybugs + (ladybug -> withinBoundsPosition)))
     }
   }
 }
