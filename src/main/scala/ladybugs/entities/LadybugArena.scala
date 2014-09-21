@@ -63,8 +63,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         )
 
         val ok = positionWithinBounds(requestedPosition)
-        val x = ladybugs.updated(sender(), requestedPosition)
-        if (ok) context.become(this.default(x))
+        if (ok) context.become(this.default(ladybugs.updated(sender(), requestedPosition)))
         val nextPosition = if (ok) requestedPosition else position
         sender() ! MovementRequestResponse(ok, request, nextPosition)
       }
