@@ -11,19 +11,17 @@ object Gender extends Enumeration {
   def random = if (Random.nextBoolean()) male else female
 }
 
-case class LadybugState(x: Double,
-                        y: Double,
-                        directionAngle: Double = Random.nextDouble() * 360,
+case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
                         blocked: Boolean = false,
                         age: Double = 0,
                         gender: Gender = Gender.random)
 
 object Ladybug {
-  case class Movement(self: ActorRef, state: LadybugState)
+  case class Movement(self: ActorRef, position: LadybugPosition, state: LadybugState)
 
-  def props(x: Double, y: Double) = {
-    val state = LadybugState(x, y)
+  def props() = {
+    val state = LadybugState()
     Props(classOf[Ladybug], state)
   }
 
@@ -52,9 +50,6 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     val nextDirection = Vec2d.right.rotate(angleRadian).normalised
 
     val speed = 3
-    val nextX = state.x + nextDirection.x * speed
-    val nextY = state.y + nextDirection.y * speed
-
 
     val nextState = state.copy(
       directionAngle = nextDirectionAngle,
@@ -62,7 +57,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
       age = state.age + 1
     )
 
-    (nextState, nextX, nextY)
+    (nextState, nextDirection * speed)
   }
 
   def radius(state: LadybugState): Double = {
@@ -74,8 +69,8 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     state
   }
 
-  def handleMovement(state: LadybugState, x: Double, y: Double): LadybugState = {
-    state.copy(x = x, y = y, blocked = false)
+  def handleMovement(state: LadybugState, position: LadybugPosition): LadybugState = {
+    state.copy(blocked = false)
   }
 
   def handleBlocked(state: LadybugState): LadybugState = {
@@ -90,19 +85,19 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
 
   def alive(state: LadybugState): Receive = {
     case LetsMove() => {
-      val (nextState, nextX, nextY) = calculateNextMovement(state)
+      val (nextState, nextDirection) = calculateNextMovement(state)
 
-      sender() ! MovementRequest(nextX, nextY, radius(state))
+      sender() ! MovementRequest(nextDirection, radius(state))
       advanceState(nextState)
     }
-    case MovementRequestResponse(ok, request) => {
+    case MovementRequestResponse(ok, request, position) => {
       val newState =
-        if (ok) handleMovement(state, request.x, request.y)
+        if (ok) handleMovement(state, position)
         else handleBlocked(state)
 
       advanceState(newState)
 
-      context.system.eventStream.publish(Movement(self, newState))
+      context.system.eventStream.publish(Movement(self, position, newState))
     }
   }
 }

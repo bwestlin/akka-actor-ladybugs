@@ -1,6 +1,6 @@
 package ladybugs.json
 
-import ladybugs.entities.{Gender, LadybugState}
+import ladybugs.entities.{LadybugPosition, Gender, LadybugState}
 import spray.json._
 import ladybugs.entities.Ladybug.Movement
 import akka.actor.ActorRef
@@ -16,6 +16,7 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def write(gender: Gender.Value): JsValue = JsString(gender.toString)
   }
 
-  implicit val ladybugStateFormat = jsonFormat7(LadybugState)
-  implicit val movementFormat = jsonFormat2(Movement)
+  implicit val ladybugPositionFormat = jsonFormat3(LadybugPosition)
+  implicit val ladybugStateFormat = jsonFormat5(LadybugState)
+  implicit val movementFormat = jsonFormat3(Movement)
 }

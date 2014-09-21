@@ -110,8 +110,8 @@ var LadybugHandler = (function () {
 
     $elem
       .css({
-        "left": parseInt(ladybug.state.x) + "px",
-        "top":  parseInt(ladybug.state.y) + "px",
+        "left": parseInt(ladybug.position.x) + "px",
+        "top":  parseInt(ladybug.position.y) + "px",
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
       /*.text(angle)*/;

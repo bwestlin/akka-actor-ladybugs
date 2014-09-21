@@ -1,25 +1,28 @@
 package ladybugs.entities
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import ladybugs.calculation.Vec2d
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.Random
+
+case class LadybugPosition(x: Double, y: Double, radius: Double = 20)
 
 object LadybugArena {
-  def props(width: Int, height: Int, ladybugs: Seq[ActorRef]) = Props(classOf[LadybugArena], width, height, ladybugs)
+  def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
-  case class Spawn(x: Double, y: Double)
+  case class Spawn(maybePosition: Option[LadybugPosition] = None)
   case class InitiateMovement()
   case class LetsMove()
-  case class MovementRequest(x: Double, y: Double, radius: Double)
-  case class MovementRequestResponse(ok: Boolean, request: MovementRequest)
+  case class MovementRequest(direction: Vec2d, radius: Double)
+  case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: LadybugPosition)
 }
 
-class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef]) extends Actor with ActorLogging {
+class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
 
   import LadybugArena._
 
   val movementInterval = 100 milliseconds
-
   val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
 
   override def postStop(): Unit = {
@@ -27,18 +30,40 @@ class LadybugArena(val width: Int, val height: Int, val ladybugs: Seq[ActorRef])
     mover.cancel()
   }
 
-  def movementWithinBounds(x: Double, y: Double, radius: Double) = {
-    x >= radius && y >= radius && x < width - radius && y < height - radius
+  def positionWithinBounds(p: LadybugPosition): Boolean = {
+    p.x >= p.radius && p.y >= p.radius && p.x < width - p.radius && p.y < height - p.radius
   }
 
-  def receive = {
-    case InitiateMovement() => {
-      ladybugs.foreach(_ ! LetsMove())
-    }
-    case r @ MovementRequest(x, y, radius) => {
-      val ok = movementWithinBounds(x, y, radius)
+  def receive = default(Map.empty)
 
-      sender() ! MovementRequestResponse(ok, r)
+  def default(ladybugs: Map[ActorRef, LadybugPosition]): Receive = {
+    case InitiateMovement() => {
+      ladybugs.keys.foreach(_ ! LetsMove())
+    }
+    case request @ MovementRequest(direction, radius) => {
+      ladybugs.get(sender()).foreach { position =>
+        val requestedPosition = LadybugPosition(
+          position.x + direction.x,
+          position.y + direction.y,
+          radius
+        )
+
+        val ok = positionWithinBounds(requestedPosition)
+        val x = ladybugs.updated(sender(), requestedPosition)
+        if (ok) context.become(this.default(x))
+        val nextPosition = if (ok) requestedPosition else position
+        sender() ! MovementRequestResponse(ok, request, nextPosition)
+      }
+    }
+    case Spawn(maybePosition) => {
+      val position = maybePosition.getOrElse(LadybugPosition(
+        Random.nextInt(width),
+        Random.nextInt(height)
+      ))
+
+      val ladybug = context.system.actorOf(Ladybug.props(), s"ladybug${ladybugs.size}")
+
+      context.become(this.default(ladybugs + (ladybug -> position)))
     }
   }
 }

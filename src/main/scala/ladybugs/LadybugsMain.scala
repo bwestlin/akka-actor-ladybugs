@@ -3,6 +3,7 @@ package ladybugs
 import akka.actor.ActorSystem
 import akka.io.IO
 import ladybugs.calculation.Vec2d
+import ladybugs.entities.LadybugArena.Spawn
 import ladybugs.entities.{LadybugArena, Ladybug}
 import ladybugs.http.{LadybygWebsocketUpdater, HttpServer}
 import spray.can.Http
@@ -25,14 +26,9 @@ object LadybugsMain extends App {
     val arenaWidth = 800
     val arenaHeight = 600
 
-    val ladybugs = for (i <- (1 to 10).toSeq) yield {
-      val props = Ladybug.props(
-        Random.nextInt(arenaWidth),
-        Random.nextInt(arenaHeight)
-      )
-      system.actorOf(props, s"ladybug$i")
-    }
-    val arena = system.actorOf(LadybugArena.props(arenaWidth, arenaHeight, ladybugs), "arena")
+    val arena = system.actorOf(LadybugArena.props(arenaWidth, arenaHeight), "arena")
+
+    for (_ <- 1 to 10) arena ! Spawn()
 
     val updater = system.actorOf(LadybygWebsocketUpdater.props(), "updater")
 
