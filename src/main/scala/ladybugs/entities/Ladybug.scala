@@ -61,7 +61,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
   }
 
   def radius(state: LadybugState): Double = {
-    20
+    15
   }
 
   def advanceState(state: LadybugState): LadybugState = {
