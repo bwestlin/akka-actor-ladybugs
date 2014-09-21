@@ -6,7 +6,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.Random
 
-case class LadybugPosition(x: Double, y: Double, radius: Double = 20)
+case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
+  def distanceTo(otherPosition: LadybugPosition): Double = {
+    val a = if (x > otherPosition.x) x - otherPosition.x else otherPosition.x - x
+    val b = if (y > otherPosition.y) y - otherPosition.y else otherPosition.y - y
+    Math.sqrt(a * a + b * b)
+  }
+}
 
 object LadybugArena {
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
@@ -48,6 +54,12 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     p.copy(x, y, p.radius)
   }
 
+  def positionBlocked(requestedPosition: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Boolean = {
+    ladybugs.exists { case (_, position) =>
+        requestedPosition.distanceTo(position) - requestedPosition.radius - position.radius < 0
+    }
+  }
+
   def receive = default(Map.empty)
 
   def default(ladybugs: Map[ActorRef, LadybugPosition]): Receive = {
@@ -62,7 +74,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
           radius
         )
 
-        val ok = positionWithinBounds(requestedPosition)
+        val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, ladybugs - sender())
         if (ok) context.become(this.default(ladybugs.updated(sender(), requestedPosition)))
         val nextPosition = if (ok) requestedPosition else position
         sender() ! MovementRequestResponse(ok, request, nextPosition)
