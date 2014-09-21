@@ -5,7 +5,7 @@ name := """akka-ladybugs-spray-ws"""
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.2"
 
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io",
