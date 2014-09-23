@@ -21,12 +21,36 @@ body {
   background-position: inherit;
 }
 
-.ladybug.male:before {
+.ladybug.egg:before {
+  background-image: url('/images/ladybug_egg.png');
+  left: -10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+}
+
+.ladybug.child:before {
+  background-image: url('/images/ladybug_child.png');
+  left: -15px;
+  top: -15px;
+  width: 30px;
+  height: 30px;
+}
+
+.ladybug.male.adult:before {
   background-image: url('/images/ladybug_adult_male.png');
 }
 
-.ladybug.female:before {
+.ladybug.female.adult:before {
   background-image: url('/images/ladybug_adult_female.png');
+}
+
+.ladybug.old:before {
+  background-image: url('/images/ladybug_old.png');
+}
+
+.ladybug.dead:before {
+  background-image: url('/images/ladybug_dead.png');
 }
 
 #msgsPerSec {

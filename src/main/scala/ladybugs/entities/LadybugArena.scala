@@ -17,7 +17,9 @@ case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
 object LadybugArena {
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
-  case class Spawn(maybePosition: Option[LadybugPosition] = None)
+  val movementInterval = 100 milliseconds
+
+  case class Spawn(maybePosition: Option[LadybugPosition] = None, maybeAge: Option[Int] = None)
   case class InitiateMovement()
   case class LetsMove()
   case class MovementRequest(direction: Vec2d, radius: Double)
@@ -28,7 +30,6 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
   import LadybugArena._
 
-  val movementInterval = 100 milliseconds
   val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
 
   override def postStop(): Unit = {
@@ -80,7 +81,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         sender() ! MovementRequestResponse(ok, request, nextPosition)
       }
     }
-    case Spawn(maybePosition) => {
+    case Spawn(maybePosition, maybeAge) => {
       val position = maybePosition.getOrElse(LadybugPosition(
         Random.nextInt(width),
         Random.nextInt(height)
@@ -88,7 +89,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
       val withinBoundsPosition = adjustPositionWithinBounds(position)
 
-      val ladybug = context.system.actorOf(Ladybug.props(), s"ladybug${ladybugs.size}")
+      val ladybug = context.system.actorOf(Ladybug.props(maybeAge), s"ladybug${ladybugs.size}")
 
       context.become(this.default(ladybugs + (ladybug -> withinBoundsPosition)))
     }

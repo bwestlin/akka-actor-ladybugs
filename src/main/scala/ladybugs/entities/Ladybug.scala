@@ -3,6 +3,7 @@ package ladybugs.entities
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Gender.Gender
+import ladybugs.entities.Stage.Stage
 import scala.util.Random
 
 object Gender extends Enumeration {
@@ -11,17 +12,35 @@ object Gender extends Enumeration {
   def random = if (Random.nextBoolean()) male else female
 }
 
+object Stage extends Enumeration {
+  type Stage = Value
+  val egg, child, adult, old, dead = Value
+
+  def fromAge(age: Int) = {
+    import scala.concurrent.duration._
+    val ageDuration = LadybugArena.movementInterval * age
+
+    if (ageDuration < 20.seconds) egg
+    else if (ageDuration < 50.seconds) child
+    else if (ageDuration < 170.seconds) adult
+    else if (ageDuration < 200.seconds) old
+    else dead
+  }
+}
+
 case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
                         blocked: Boolean = false,
-                        age: Double = 0,
-                        gender: Gender = Gender.random)
+                        age: Int = 0,
+                        gender: Gender = Gender.random) {
+  def stage = Stage.fromAge(age)
+}
 
 object Ladybug {
   case class Movement(self: ActorRef, position: LadybugPosition, state: LadybugState)
 
-  def props() = {
-    val state = LadybugState()
+  def props(maybeAge: Option[Int]) = {
+    val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
     Props(classOf[Ladybug], state)
   }
 
@@ -32,7 +51,7 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
   import Ladybug._
   import LadybugArena._
 
-  override def receive = alive(initialState)
+  override def receive = default(initialState)
 
   def calculateNextTurningAngle(turningAngle: Double) = {
     val maxAngle = 3
@@ -41,31 +60,41 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     Math.signum(nextTurningAngle) * Math.min(Math.abs(nextTurningAngle), maxAngle)
   }
 
-  def calculateNextMovement(state: LadybugState) = {
-    val nextTurningAngle = if (!state.blocked) calculateNextTurningAngle(state.turningAngle) else state.turningAngle
-    val nextDirectionAngle = state.directionAngle + nextTurningAngle
+  def calculateNextMovement(state: LadybugState) = state.stage match {
+    case Stage.egg | Stage.dead => (state, Vec2d.none)
+    case stage => {
+      val nextTurningAngle = if (!state.blocked) calculateNextTurningAngle(state.turningAngle) else state.turningAngle
+      val nextDirectionAngle = state.directionAngle + nextTurningAngle
 
-    val angleRadian = nextDirectionAngle * Math.PI / 180
+      val angleRadian = nextDirectionAngle * Math.PI / 180
 
-    val nextDirection = Vec2d.right.rotate(angleRadian).normalised
+      val nextDirection = Vec2d.right.rotate(angleRadian).normalised
 
-    val speed = 3
+      val speed = stage match {
+        case Stage.child => 2
+        case Stage.old => 1
+        case _ => 3
+      }
 
-    val nextState = state.copy(
-      directionAngle = nextDirectionAngle,
-      turningAngle = nextTurningAngle,
-      age = state.age + 1
-    )
+      val nextState = state.copy(
+        directionAngle = nextDirectionAngle,
+        turningAngle = nextTurningAngle
+      )
 
-    (nextState, nextDirection * speed)
+      (nextState, nextDirection * speed)
+    }
   }
 
   def radius(state: LadybugState): Double = {
-    15
+    state.stage match {
+      case Stage.egg => 8
+      case Stage.child => 10
+      case _ => 15
+    }
   }
 
   def advanceState(state: LadybugState): LadybugState = {
-    context.become(alive(state))
+    context.become(default(state))
     state
   }
 
@@ -83,9 +112,9 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     }
   }
 
-  def alive(state: LadybugState): Receive = {
+  def default(state: LadybugState): Receive = {
     case LetsMove() => {
-      val (nextState, nextDirection) = calculateNextMovement(state)
+      val (nextState, nextDirection) = calculateNextMovement(state.copy(age = state.age + 1))
 
       sender() ! MovementRequest(nextDirection, radius(state))
       advanceState(nextState)

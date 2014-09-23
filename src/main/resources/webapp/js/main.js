@@ -100,13 +100,21 @@ var LadybugHandler = (function () {
       $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("body");
     }
 
+    var stageInfo = {
+      egg:   { width: 20, numImages: 1 , numFrames: 1 },
+      child: { width: 30, numImages: 32, numFrames: 4 },
+      adult: { width: 40, numImages: 32, numFrames: 4 },
+      old:   { width: 40, numImages: 32, numFrames: 4 },
+      dead:  { width: 40, numImages: 32, numFrames: 1 }
+    }[ladybug.state.stage];
+
     var angle = bounded(parseInt(ladybug.state.directionAngle) * -1, 360);
-    var degreesPerImageStep = 360 / 32;
-    var rotateImageStep = parseInt((angle + (degreesPerImageStep / 2)) / degreesPerImageStep) % 32;
-    var bgPosX = rotateImageStep * 40 * -1;
-    if (bgPosX > 0) bgPosX -= 1280;
+    var degreesPerImageStep = 360 / stageInfo.numImages;
+    var rotateImageStep = parseInt((angle + (degreesPerImageStep / 2)) / degreesPerImageStep) % stageInfo.numImages;
+    var bgPosX = rotateImageStep * stageInfo.width * -1;
+    if (bgPosX > 0) bgPosX -= (stageInfo.width * stageInfo.numImages);
     //console.log("angle=" + angle + ", rotateImageStep=" + rotateImageStep + ", bgPosX=" + bgPosX + ", degreesPerImageStep=" + degreesPerImageStep);
-    var bgPosY = (animStep % 4) * 40 * -1;
+    var bgPosY = (animStep % stageInfo.numFrames) * stageInfo.width * -1;
 
     $elem
       .css({
@@ -114,6 +122,8 @@ var LadybugHandler = (function () {
         "top":  parseInt(ladybug.position.y) + "px",
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
+      .removeClass("egg child adult old dead")
+      .addClass(ladybug.state.stage)
       /*.text(angle)*/;
   }
 

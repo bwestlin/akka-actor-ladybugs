@@ -1,6 +1,6 @@
 package ladybugs.json
 
-import ladybugs.entities.{LadybugPosition, Gender, LadybugState}
+import ladybugs.entities.{Stage, LadybugPosition, Gender, LadybugState}
 import spray.json._
 import ladybugs.entities.Ladybug.Movement
 import akka.actor.ActorRef
@@ -17,6 +17,14 @@ object JsonProtocol extends DefaultJsonProtocol {
   }
 
   implicit val ladybugPositionFormat = jsonFormat3(LadybugPosition)
-  implicit val ladybugStateFormat = jsonFormat5(LadybugState)
+
+  implicit object LadybugStateFormat extends RootJsonFormat[LadybugState] {
+    val baseFormat =  jsonFormat5(LadybugState)
+    override def read(json: JsValue): LadybugState = ???
+    override def write(state: LadybugState): JsValue = baseFormat.write(state) match {
+      case JsObject(fields) => JsObject(fields + ("stage" -> JsString(state.stage.toString)))
+    }
+  }
+
   implicit val movementFormat = jsonFormat3(Movement)
 }

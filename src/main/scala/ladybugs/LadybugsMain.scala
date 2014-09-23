@@ -28,7 +28,7 @@ object LadybugsMain extends App {
 
     val arena = system.actorOf(LadybugArena.props(arenaWidth, arenaHeight), "arena")
 
-    for (_ <- 1 to 20) arena ! Spawn()
+    for (_ <- 1 to 20) arena ! Spawn(maybeAge = Some((50 + Random.nextInt(50)) * 10))
 
     val updater = system.actorOf(LadybygWebsocketUpdater.props(), "updater")
 

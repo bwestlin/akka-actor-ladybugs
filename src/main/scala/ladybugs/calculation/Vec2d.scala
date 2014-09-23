@@ -30,6 +30,7 @@ case class Vec2d(x: Double, y: Double) {
 
 object Vec2d {
 
+  val none  = Vec2d(0, 0)
   val right = Vec2d(1, 0)
   val up    = Vec2d(0, -1)
   val left  = Vec2d(-1, 0)
