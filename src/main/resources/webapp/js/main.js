@@ -104,7 +104,7 @@ var LadybugHandler = (function () {
       egg:   { width: 20, numImages: 1 , numFrames: 1 },
       child: { width: 30, numImages: 32, numFrames: 4 },
       adult: { width: 40, numImages: 32, numFrames: 4 },
-      old:   { width: 40, numImages: 32, numFrames: 4 },
+      old:   { width: 40, numImages: 32, numFrames: 4, animDevisor: 3 },
       dead:  { width: 40, numImages: 32, numFrames: 1 }
     }[ladybug.state.stage];
 
@@ -114,7 +114,8 @@ var LadybugHandler = (function () {
     var bgPosX = rotateImageStep * stageInfo.width * -1;
     if (bgPosX > 0) bgPosX -= (stageInfo.width * stageInfo.numImages);
     //console.log("angle=" + angle + ", rotateImageStep=" + rotateImageStep + ", bgPosX=" + bgPosX + ", degreesPerImageStep=" + degreesPerImageStep);
-    var bgPosY = (animStep % stageInfo.numFrames) * stageInfo.width * -1;
+    var animStepDivisor = stageInfo.animDevisor || 1;
+    var bgPosY = (parseInt(animStep / animStepDivisor) % stageInfo.numFrames) * stageInfo.width * -1;
 
     $elem
       .css({
