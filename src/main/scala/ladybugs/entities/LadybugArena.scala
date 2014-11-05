@@ -17,7 +17,7 @@ case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
 object LadybugArena {
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
-  val movementInterval = 100 milliseconds
+  val movementInterval = 100.milliseconds
 
   case class Spawn(maybePosition: Option[LadybugPosition] = None, maybeAge: Option[Int] = None)
   case class InitiateMovement()

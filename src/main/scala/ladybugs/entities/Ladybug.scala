@@ -63,7 +63,9 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
   def calculateNextMovement(state: LadybugState) = state.stage match {
     case Stage.egg | Stage.dead => (state, Vec2d.none)
     case stage => {
-      val nextTurningAngle = if (!state.blocked) calculateNextTurningAngle(state.turningAngle) else state.turningAngle
+      val nextTurningAngle =
+        if (!state.blocked) calculateNextTurningAngle(state.turningAngle)
+        else state.turningAngle
       val nextDirectionAngle = state.directionAngle + nextTurningAngle
 
       val angleRadian = nextDirectionAngle * Math.PI / 180

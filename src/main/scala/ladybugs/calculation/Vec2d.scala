@@ -25,7 +25,6 @@ case class Vec2d(x: Double, y: Double) {
   }
 
   def angle = Math.atan2(y, x)
-
 }
 
 object Vec2d {
