@@ -1,7 +1,7 @@
 import com.typesafe.sbt.SbtNativePackager._
 import NativePackagerKeys._
 
-name := """akka-ladybugs-spray-ws"""
+name := """reactive-ladybugs"""
 
 version := "1.0"
 
