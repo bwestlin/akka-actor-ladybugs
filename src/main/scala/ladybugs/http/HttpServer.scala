@@ -15,6 +15,7 @@ object HttpServer {
 }
 
 class HttpServer extends Actor with ActorLogging {
+
   def receive = {
     // when a new connection comes in we register a WebSocketConnection actor as the per connection handler
     case Http.Connected(remoteAddress, localAddress) =>
@@ -27,8 +28,8 @@ class HttpServer extends Actor with ActorLogging {
 object HttpWorker {
   def props(serverConnection: ActorRef) = Props(classOf[HttpWorker], serverConnection)
 }
+
 class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with websocket.WebSocketServerWorker {
-  override def receive = handshaking orElse businessLogicNoWebSocket orElse closeLogic
 
   context.system.eventStream.subscribe(self, classOf[BroadcastWS])
 
@@ -36,6 +37,8 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
     super.postStop()
     context.system.eventStream.unsubscribe(self)
   }
+
+  override def receive = handshaking orElse businessLogicNoWebSocket orElse closeLogic
 
   def businessLogic: Receive = {
     case PushWS(msg) => send(TextFrame(msg))
@@ -45,7 +48,7 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
     case x: FrameCommandFailed =>
       log.error("frame command failed", x)
 
-    case x: HttpRequest => // do something
+    case x: HttpRequest =>
   }
 
   def businessLogicNoWebSocket: Receive = {

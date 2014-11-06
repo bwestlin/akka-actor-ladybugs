@@ -7,6 +7,7 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
+
   def distanceTo(otherPosition: LadybugPosition): Double = {
     val a = if (x > otherPosition.x) x - otherPosition.x else otherPosition.x - x
     val b = if (y > otherPosition.y) y - otherPosition.y else otherPosition.y - y
@@ -15,6 +16,7 @@ case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
 }
 
 object LadybugArena {
+
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
   val movementInterval = 100.milliseconds

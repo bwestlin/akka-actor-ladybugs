@@ -3,7 +3,6 @@ package ladybugs.entities
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Gender.Gender
-import ladybugs.entities.Stage.Stage
 import scala.util.Random
 
 object Gender extends Enumeration {
@@ -33,17 +32,18 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
                         blocked: Boolean = false,
                         age: Int = 0,
                         gender: Gender = Gender.random) {
+
   def stage = Stage.fromAge(age)
 }
 
 object Ladybug {
+
   case class Movement(self: ActorRef, position: LadybugPosition, state: LadybugState)
 
   def props(maybeAge: Option[Int]) = {
     val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
     Props(classOf[Ladybug], state)
   }
-
 }
 
 class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {

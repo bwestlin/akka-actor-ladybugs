@@ -1,6 +1,6 @@
 package ladybugs.json
 
-import ladybugs.entities.{Stage, LadybugPosition, Gender, LadybugState}
+import ladybugs.entities.{LadybugPosition, Gender, LadybugState}
 import spray.json._
 import ladybugs.entities.Ladybug.Movement
 import akka.actor.ActorRef
