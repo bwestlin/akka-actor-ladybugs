@@ -10,7 +10,7 @@ ladybug that it represented, including drawing to the screen.
 This exercise was mainly about learning to program correctly in the realms of multi-threading and the exercise
 was set to be done in C++ targeting the Win32 API.
 
-*Here follows a video of the application running:*
+*Here follows a video of that application running:*
 
 <iframe width="640" height="480" src="//www.youtube.com/embed/mhjmqMw9Lnc" frameborder="0" allowfullscreen></iframe>
 
