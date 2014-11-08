@@ -25,7 +25,7 @@ object LadybugArena {
   case class InitiateMovement()
   case class LetsMove()
   case class MovementRequest(direction: Vec2d, radius: Double)
-  case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: LadybugPosition)
+  case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: LadybugPosition, nearbyLadybugs: Seq[ActorRef])
 }
 
 class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
@@ -63,6 +63,12 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }
   }
 
+  def nearbyLadybugs(position: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Seq[ActorRef] = {
+    ladybugs.filter { case (_, otherPosition) =>
+      position.distanceTo(otherPosition) - position.radius - otherPosition.radius <= 4
+    }.keys.toSeq
+  }
+
   def receive = default(Map.empty)
 
   def default(ladybugs: Map[ActorRef, LadybugPosition]): Receive = {
@@ -77,10 +83,12 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
           radius
         )
 
-        val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, ladybugs - sender())
+        val otherLadybugs = ladybugs - sender()
+        val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, otherLadybugs)
         if (ok) context.become(this.default(ladybugs.updated(sender(), requestedPosition)))
         val nextPosition = if (ok) requestedPosition else position
-        sender() ! MovementRequestResponse(ok, request, nextPosition)
+
+        sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
       }
     }
     case Spawn(maybePosition, maybeAge) => {

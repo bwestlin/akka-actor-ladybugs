@@ -19,7 +19,7 @@ object JsonProtocol extends DefaultJsonProtocol {
   implicit val ladybugPositionFormat = jsonFormat3(LadybugPosition)
 
   implicit object LadybugStateFormat extends RootJsonFormat[LadybugState] {
-    val baseFormat =  jsonFormat5(LadybugState)
+    val baseFormat =  jsonFormat9(LadybugState)
     override def read(json: JsValue): LadybugState = ???
     override def write(state: LadybugState): JsValue = baseFormat.write(state) match {
       case JsObject(fields) => JsObject(fields + ("stage" -> JsString(state.stage.toString)))

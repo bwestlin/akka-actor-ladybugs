@@ -3,6 +3,7 @@ package ladybugs.entities
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Gender.Gender
+import ladybugs.entities.Stage.Stage
 import scala.util.Random
 
 object Gender extends Enumeration {
@@ -31,14 +32,61 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
                         blocked: Boolean = false,
                         age: Int = 0,
-                        gender: Gender = Gender.random) {
+                        gender: Gender = Gender.random,
+                        fertilityPercent: Int = 100,
+                        fertilityDirection: Int = -1,
+                        birthTime: Int = 0,
+                        eggs: Int = 0) {
 
   def stage = Stage.fromAge(age)
+
+  def fertile = stage == Stage.adult && (gender == Gender.male || fertilityPercent >= 90)
+
+  def pregnant = gender == Gender.female && birthTime >= 0 && eggs > 0
+
+  def pregnancyPossible = gender == Gender.female && fertile && !pregnant
+
+  def tryBecomePregnant(otherGender: Gender, otherStage: Stage) = {
+    if (pregnancyPossible && gender != otherGender && otherStage == Stage.adult) {
+      copy(birthTime = 100, eggs = Random.nextInt(2) + 1)
+    }
+    else this
+  }
+
+  def incrementAge = {
+    val nextAge = age + 1
+    val nextFertilityPercent =
+      if (gender == Gender.female) fertilityPercent + fertilityDirection
+      else fertilityPercent
+    val nextFertilityDirection =
+      if (nextFertilityPercent == 0 || nextFertilityPercent == 100) -fertilityDirection
+      else fertilityDirection
+    val nextBirthTime =
+      if (birthTime > 0) birthTime - 1
+      else birthTime
+
+    val nextState = copy(
+      age = nextAge,
+      fertilityPercent = nextFertilityPercent,
+      fertilityDirection = nextFertilityDirection,
+      birthTime = nextBirthTime
+    )
+
+
+    if (pregnant) {
+      println(s"Pregnant $nextState")
+    }
+    nextState
+  }
+
 }
 
 object Ladybug {
 
   case class Movement(self: ActorRef, position: LadybugPosition, state: LadybugState)
+
+  case class ReproductionRequest()
+  case class ReproductionResponse(gender: Gender, stage: Stage)
 
   def props(maybeAge: Option[Int]) = {
     val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
@@ -72,9 +120,10 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
 
       val nextDirection = Vec2d.right.rotate(angleRadian).normalised
 
-      val speed = stage match {
-        case Stage.child => 2
-        case Stage.old => 1
+      val speed = (stage, state.gender) match {
+        case (Stage.child, _) => 2
+        case (Stage.old, _) => 1
+        case (_, Gender.female) if state.pregnant => 2
         case _ => 3
       }
 
@@ -114,21 +163,44 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
     }
   }
 
+  def handleNearbyLadybugs(state: LadybugState, nearbyLadybugs: Seq[ActorRef]) = {
+    if (state.pregnancyPossible)
+      nearbyLadybugs.foreach(_ ! ReproductionRequest())
+  }
+
+  def potentiallyGiveBirth(state: LadybugState, position: LadybugPosition) = {
+    if (state.pregnant && state.birthTime == 0) {
+      for (_ <- 1 to state.eggs) {
+        sender() ! Spawn(Some(position), Some(0))
+      }
+      state.copy(eggs = 0)
+    }
+    else state
+  }
+
   def default(state: LadybugState): Receive = {
     case LetsMove() => {
-      val (nextState, nextDirection) = calculateNextMovement(state.copy(age = state.age + 1))
+      val (nextState, nextDirection) = calculateNextMovement(state.incrementAge)
 
       sender() ! MovementRequest(nextDirection, radius(state))
       advanceState(nextState)
     }
-    case MovementRequestResponse(ok, request, position) => {
+    case MovementRequestResponse(ok, request, position, nearbyLadybugs) => {
+      handleNearbyLadybugs(state, nearbyLadybugs)
+
       val newState =
         if (ok) handleMovement(state, position)
         else handleBlocked(state)
 
-      advanceState(newState)
+      advanceState(potentiallyGiveBirth(newState, position))
 
       context.system.eventStream.publish(Movement(self, position, newState))
+    }
+    case ReproductionRequest() => {
+      sender() ! ReproductionResponse(state.gender, state.stage)
+    }
+    case ReproductionResponse(otherGender, otherStage) => {
+      advanceState(state.tryBecomePregnant(otherGender, otherStage))
     }
   }
 }
