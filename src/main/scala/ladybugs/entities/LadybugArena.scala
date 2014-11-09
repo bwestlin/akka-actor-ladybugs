@@ -84,8 +84,6 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
       }.getOrElse(position #:: Stream.empty)
     }
 
-    println(s"tryPosition(requestedPosition).take(10)=${tryPosition(requestedPosition).take(10).mkString(",")}")
-
     tryPosition(requestedPosition).take(10).last
   }
 
