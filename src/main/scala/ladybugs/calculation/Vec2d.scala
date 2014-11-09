@@ -25,6 +25,13 @@ case class Vec2d(x: Double, y: Double) {
   }
 
   def angle = Math.atan2(y, x)
+
+  def distanceTo(other: Vec2d): Double = {
+    val a = x - other.x
+    val b = y - other.y
+    Math.sqrt(a * a + b * b)
+  }
+
 }
 
 object Vec2d {

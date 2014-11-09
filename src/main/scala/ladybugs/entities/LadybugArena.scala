@@ -6,12 +6,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.Random
 
-case class LadybugPosition(x: Double, y: Double, radius: Double = 20) {
+case class LadybugPosition(pos: Vec2d, radius: Double = 20) {
 
   def distanceTo(otherPosition: LadybugPosition): Double = {
-    val a = if (x > otherPosition.x) x - otherPosition.x else otherPosition.x - x
-    val b = if (y > otherPosition.y) y - otherPosition.y else otherPosition.y - y
-    Math.sqrt(a * a + b * b)
+    pos.distanceTo(otherPosition.pos)
   }
 }
 
@@ -40,21 +38,21 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
   }
 
   def positionWithinBounds(p: LadybugPosition): Boolean = {
-    p.x >= p.radius && p.y >= p.radius && p.x < width - p.radius && p.y < height - p.radius
+    p.pos.x >= p.radius && p.pos.y >= p.radius && p.pos.x < width - p.radius && p.pos.y < height - p.radius
   }
 
   def adjustPositionWithinBounds(p: LadybugPosition) = {
     val x =
-      if (p.x - p.radius < 0) p.radius
-      else if (p.x + p.radius >= width) width - p.radius
-      else p.x
+      if (p.pos.x - p.radius < 0) p.radius
+      else if (p.pos.x + p.radius >= width) width - p.radius
+      else p.pos.x
 
     val y =
-      if (p.y - p.radius < 0) p.radius
-      else if (p.y + p.radius >= height) height - p.radius
-      else p.y
+      if (p.pos.y - p.radius < 0) p.radius
+      else if (p.pos.y + p.radius >= height) height - p.radius
+      else p.pos.y
 
-    p.copy(x, y, p.radius)
+    p.copy(Vec2d(x, y), p.radius)
   }
 
   def positionBlocked(requestedPosition: LadybugPosition, previousPosition: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Boolean = {
@@ -64,6 +62,31 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
       requestPositionDistance - requestedPosition.radius - position.radius < 0 && requestPositionDistance < previousPositionDistance
     }
+  }
+
+  def adjustPositionIfOverlapped(requestedPosition: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]) = {
+    val ladybugPosition = ladybugs.values.toSeq
+    def tryPosition(position: LadybugPosition): Stream[LadybugPosition] = {
+      val closesOverlapping = ladybugPosition.filter { otherPosition =>
+            position.distanceTo(otherPosition) - position.radius - otherPosition.radius < 0
+        }.sortBy(position.distanceTo).reverse.headOption
+
+      closesOverlapping.map { overlappingPosition =>
+        val positionDiff = overlappingPosition.pos - position.pos
+        val positionDiffNormalized =
+          if (positionDiff.magnitude == 0) Vec2d.right.normalised
+          else positionDiff.normalised
+
+        val newPosition = position.copy(
+          pos = position.pos + (positionDiffNormalized * (overlappingPosition.radius + position.radius))
+        )
+        newPosition #:: tryPosition(newPosition)
+      }.getOrElse(position #:: Stream.empty)
+    }
+
+    println(s"tryPosition(requestedPosition).take(10)=${tryPosition(requestedPosition).take(10).mkString(",")}")
+
+    tryPosition(requestedPosition).take(10).last
   }
 
   def nearbyLadybugs(position: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Seq[ActorRef] = {
@@ -81,30 +104,26 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     case request @ MovementRequest(direction, radius) => {
       ladybugs.get(sender()).foreach { position =>
         val requestedPosition = LadybugPosition(
-          position.x + direction.x,
-          position.y + direction.y,
+          position.pos + direction,
           radius
         )
 
         val otherLadybugs = ladybugs - sender()
         val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, position, otherLadybugs)
-        if (ok) context.become(this.default(ladybugs.updated(sender(), requestedPosition)))
-        val nextPosition = if (ok) requestedPosition else position
+        val nextPosition = if (ok) requestedPosition else adjustPositionWithinBounds(position)
+        if (position != nextPosition) context.become(this.default(ladybugs.updated(sender(), nextPosition)))
 
         sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
       }
     }
     case Spawn(maybePosition, maybeAge) => {
-      val position = maybePosition.getOrElse(LadybugPosition(
-        Random.nextInt(width),
-        Random.nextInt(height)
-      ))
+      val position = maybePosition.getOrElse(LadybugPosition(Vec2d(Random.nextInt(width), Random.nextInt(height))))
 
-      val withinBoundsPosition = adjustPositionWithinBounds(position)
+      val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
 
       val ladybug = context.system.actorOf(Ladybug.props(maybeAge), s"ladybug${ladybugs.size}")
 
-      context.become(this.default(ladybugs + (ladybug -> withinBoundsPosition)))
+      context.become(this.default(ladybugs + (ladybug -> adjustedPosition)))
     }
   }
 }

@@ -1,9 +1,10 @@
 package ladybugs.json
 
+import ladybugs.calculation.Vec2d
 import ladybugs.entities.{LadybugPosition, Gender, LadybugState}
-import spray.json._
 import ladybugs.entities.Ladybug.Movement
 import akka.actor.ActorRef
+import spray.json._
 
 object JsonProtocol extends DefaultJsonProtocol {
   implicit object ActorRefFormat extends RootJsonFormat[ActorRef] {
@@ -16,7 +17,9 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def write(gender: Gender.Value): JsValue = JsString(gender.toString)
   }
 
-  implicit val ladybugPositionFormat = jsonFormat3(LadybugPosition)
+  implicit val vec2dFormat = jsonFormat2(Vec2d.apply)
+
+  implicit val ladybugPositionFormat = jsonFormat2(LadybugPosition)
 
   implicit object LadybugStateFormat extends RootJsonFormat[LadybugState] {
     val baseFormat =  jsonFormat9(LadybugState)

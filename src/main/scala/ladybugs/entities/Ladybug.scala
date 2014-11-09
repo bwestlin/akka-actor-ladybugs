@@ -20,10 +20,10 @@ object Stage extends Enumeration {
     import scala.concurrent.duration._
     val ageDuration = LadybugArena.movementInterval * age
 
-    if (ageDuration < 20.seconds) egg
+    if (ageDuration < 10.seconds) egg
     else if (ageDuration < 50.seconds) child
-    else if (ageDuration < 170.seconds) adult
-    else if (ageDuration < 200.seconds) old
+    else if (ageDuration < 250.seconds) adult
+    else if (ageDuration < 300.seconds) old
     else dead
   }
 }
@@ -48,7 +48,7 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
 
   def tryBecomePregnant(otherGender: Gender, otherStage: Stage) = {
     if (pregnancyPossible && gender != otherGender && otherStage == Stage.adult) {
-      copy(birthTime = 100, eggs = Random.nextInt(2) + 1)
+      copy(birthTime = 200, eggs = Random.nextInt(3) + 1)
     }
     else this
   }
@@ -71,7 +71,6 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
       fertilityDirection = nextFertilityDirection,
       birthTime = nextBirthTime
     )
-
 
     if (pregnant) {
       println(s"Pregnant $nextState")
@@ -170,8 +169,10 @@ class Ladybug(val initialState: LadybugState) extends Actor with ActorLogging {
 
   def potentiallyGiveBirth(state: LadybugState, position: LadybugPosition) = {
     if (state.pregnant && state.birthTime == 0) {
+      val angleRadian = state.directionAngle * Math.PI / 180
+      val birthPosition = -Vec2d.right.rotate(angleRadian)
       for (_ <- 1 to state.eggs) {
-        sender() ! Spawn(Some(position), Some(0))
+        sender() ! Spawn(Some(position.copy(pos = position.pos + birthPosition)), Some(0))
       }
       state.copy(eggs = 0)
     }

@@ -119,8 +119,8 @@ var LadybugHandler = (function () {
 
     $elem
       .css({
-        "left": parseInt(ladybug.position.x) + "px",
-        "top":  parseInt(ladybug.position.y) + "px",
+        "left": parseInt(ladybug.position.pos.x) + "px",
+        "top":  parseInt(ladybug.position.pos.y) + "px",
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
       .removeClass("egg child adult old dead")
