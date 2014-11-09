@@ -65,17 +65,12 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
       if (birthTime > 0) birthTime - 1
       else birthTime
 
-    val nextState = copy(
+    copy(
       age = nextAge,
       fertilityPercent = nextFertilityPercent,
       fertilityDirection = nextFertilityDirection,
       birthTime = nextBirthTime
     )
-
-    if (pregnant) {
-      println(s"Pregnant $nextState")
-    }
-    nextState
   }
 
 }
