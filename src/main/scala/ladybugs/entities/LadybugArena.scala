@@ -57,9 +57,12 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     p.copy(x, y, p.radius)
   }
 
-  def positionBlocked(requestedPosition: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Boolean = {
+  def positionBlocked(requestedPosition: LadybugPosition, previousPosition: LadybugPosition, ladybugs: Map[ActorRef, LadybugPosition]): Boolean = {
     ladybugs.exists { case (_, position) =>
-        requestedPosition.distanceTo(position) - requestedPosition.radius - position.radius < 0
+      val requestPositionDistance = requestedPosition.distanceTo(position)
+      val previousPositionDistance = previousPosition.distanceTo(position)
+
+      requestPositionDistance - requestedPosition.radius - position.radius < 0 && requestPositionDistance < previousPositionDistance
     }
   }
 
@@ -84,7 +87,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         )
 
         val otherLadybugs = ladybugs - sender()
-        val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, otherLadybugs)
+        val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, position, otherLadybugs)
         if (ok) context.become(this.default(ladybugs.updated(sender(), requestedPosition)))
         val nextPosition = if (ok) requestedPosition else position
 
