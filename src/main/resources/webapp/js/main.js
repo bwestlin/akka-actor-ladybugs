@@ -94,10 +94,16 @@ var LadybugHandler = (function () {
       positions.push(ladybug);
     }
 
-    var id = "pos" + idx;
+    var id = ladybug.self;
     var $elem = $("#" + id);
     if ($elem.length == 0) {
       $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("body");
+    }
+
+    if (ladybug.state.stage == "annihilated") {
+      $elem.remove();
+      positions.splice(idx, 1);
+      return;
     }
 
     var stageInfo = {

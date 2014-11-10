@@ -1,6 +1,6 @@
 package ladybugs.entities
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor._
 import ladybugs.calculation.Vec2d
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -93,9 +93,9 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
-  def receive = default(Map.empty)
+  def receive = default(Map.empty, 0)
 
-  def default(ladybugs: Map[ActorRef, LadybugPosition]): Receive = {
+  def default(ladybugs: Map[ActorRef, LadybugPosition], spawnCounter: Int): Receive = {
     case InitiateMovement() => {
       ladybugs.keys.foreach(_ ! LetsMove())
     }
@@ -109,7 +109,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         val otherLadybugs = ladybugs - sender()
         val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, position, otherLadybugs)
         val nextPosition = if (ok) requestedPosition else adjustPositionWithinBounds(position)
-        if (position != nextPosition) context.become(this.default(ladybugs.updated(sender(), nextPosition)))
+        if (position != nextPosition) context.become(this.default(ladybugs.updated(sender(), nextPosition), spawnCounter))
 
         sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
       }
@@ -119,9 +119,14 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
       val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
 
-      val ladybug = context.system.actorOf(Ladybug.props(maybeAge), s"ladybug${ladybugs.size}")
+      val ladybugId = s"ladybug${spawnCounter}"
+      val ladybug = context.system.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
 
-      context.become(this.default(ladybugs + (ladybug -> adjustedPosition)))
+      context.watch(ladybug)
+      context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1))
+    }
+    case Terminated(ladybug) => {
+      context.become(this.default(ladybugs - ladybug, spawnCounter))
     }
   }
 }
