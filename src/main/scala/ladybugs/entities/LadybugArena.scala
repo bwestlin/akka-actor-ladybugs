@@ -115,15 +115,17 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
       }
     }
     case Spawn(maybePosition, maybeAge) => {
-      val position = maybePosition.getOrElse(LadybugPosition(Vec2d(Random.nextInt(width), Random.nextInt(height))))
+      if (ladybugs.size < 100) {
+        val position = maybePosition.getOrElse(LadybugPosition(Vec2d(Random.nextInt(width), Random.nextInt(height))))
 
-      val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
+        val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
 
-      val ladybugId = s"ladybug${spawnCounter}"
-      val ladybug = context.system.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
+        val ladybugId = s"ladybug${spawnCounter}"
+        val ladybug = context.system.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
 
-      context.watch(ladybug)
-      context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1))
+        context.watch(ladybug)
+        context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1))
+      }
     }
     case Terminated(ladybug) => {
       context.become(this.default(ladybugs - ladybug, spawnCounter))
