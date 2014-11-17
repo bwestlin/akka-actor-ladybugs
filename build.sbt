@@ -5,7 +5,7 @@ name := """reactive-ladybugs"""
 
 version := "1.0"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.4"
 
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io",
@@ -23,3 +23,5 @@ libraryDependencies ++= Seq(
 Revolver.settings
 
 packageArchetype.java_application
+
+instrumentSettings
