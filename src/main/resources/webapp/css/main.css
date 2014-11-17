@@ -1,6 +1,15 @@
 body {
-  background-image: url('/images/grass.png');
+  background-color: #3A7728;
 }
+
+#arena {
+  background-image: url('/images/grass.png');
+  position: relative;
+  width: 800px;
+  height: 600px;
+  margin: 0 auto;
+}
+
 .ladybug {
   position: absolute;
   xbackground-color: red;

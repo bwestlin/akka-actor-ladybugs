@@ -97,7 +97,7 @@ var LadybugHandler = (function () {
     var id = ladybug.self;
     var $elem = $("#" + id);
     if ($elem.length == 0) {
-      $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("body");
+      $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("#arena");
     }
 
     if (ladybug.state.stage == "annihilated") {
