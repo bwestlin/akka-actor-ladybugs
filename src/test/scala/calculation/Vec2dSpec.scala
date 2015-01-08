@@ -3,7 +3,7 @@ package calculation
 import ladybugs.calculation.Vec2d
 import org.scalatest._
 
-class Vec2dSpec extends WordSpec with Matchers  {
+class Vec2dSpec extends WordSpec with Matchers {
 
   "A Vec2d" should {
 
