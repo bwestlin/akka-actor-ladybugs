@@ -23,5 +23,3 @@ libraryDependencies ++= Seq(
 Revolver.settings
 
 packageArchetype.java_application
-
-instrumentSettings
