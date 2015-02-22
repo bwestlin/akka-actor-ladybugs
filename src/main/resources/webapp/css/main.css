@@ -1,5 +1,19 @@
 body {
-  background-color: #3A7728;
+  background-color: #FFFFFF;
+}
+
+#container {
+  position: relative;
+  width: 868px;
+  margin: 20px auto;
+}
+
+#arena-fence {
+  background-image: url('/images/bg.png');
+  padding: 30px;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 5px 5px 10px rgba(255, 255, 255, .5) inset, -5px -5px 10px rgba(33, 70, 22, .5) inset, 2px 2px 4px rgba(33, 70, 22, .20);
 }
 
 #arena {
@@ -7,7 +21,9 @@ body {
   position: relative;
   width: 800px;
   height: 600px;
-  margin: 0 auto;
+  border: #2e6125 solid 4px;
+  border-radius: 15px;
+  box-shadow: 5px 5px 10px rgba(255, 255, 255, .5), -5px -5px 10px rgba(33, 70, 22, .5);
 }
 
 .ladybug {
@@ -63,9 +79,10 @@ body {
 }
 
 #msgsPerSec {
-  background-color: black;
-  opacity: 0.5;
   color: white;
+  text-shadow: 0 0 5px black;
   font-weight: bold;
-  display: inline-block;
+  position: absolute;
+  top: 10px;
+  left: 10px;
 }
