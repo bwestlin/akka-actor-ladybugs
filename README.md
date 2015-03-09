@@ -1,4 +1,4 @@
-# Reactive Ladybugs #
+# Akka Actor Ladybugs #
 
 Once when studying at [KTH](http://www.kth.se/) we had a programming assignment consisting of building an
 application where [Ladybugs](http://en.wikipedia.org/wiki/Coccinellidae) would wander around on the screen

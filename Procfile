@@ -1,1 +1,1 @@
-web: target/universal/stage/bin/reactive-ladybugs -Dhttp.port=$PORT $JAVA_OPTS
+web: target/universal/stage/bin/akka-actor-ladybugs -Dhttp.port=$PORT $JAVA_OPTS
