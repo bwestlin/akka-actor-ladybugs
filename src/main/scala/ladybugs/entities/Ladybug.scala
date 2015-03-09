@@ -73,37 +73,18 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
       birthTime = nextBirthTime
     )
   }
-
 }
 
-object Ladybug {
+trait LadybugBehaviour {
 
-  case class Movement(self: String, position: LadybugPosition, state: LadybugState)
-
-  case class ReproductionRequest()
-  case class ReproductionResponse(gender: Gender, stage: Stage)
-
-  def props(selfId: String, maybeAge: Option[Int]) = {
-    val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
-    Props(classOf[Ladybug], selfId, state)
-  }
-}
-
-class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor with ActorLogging {
-
-  import Ladybug._
-  import LadybugArena._
-
-  override def receive = default(initialState)
-
-  def calculateNextTurningAngle(turningAngle: Double) = {
+  def calculateNextTurningAngle(turningAngle: Double): Double = {
     val maxAngle = 3
     val angleAdjustment = (Random.nextDouble() - 0.5) * 1
     val nextTurningAngle = (turningAngle - turningAngle / 50) + angleAdjustment
     Math.signum(nextTurningAngle) * Math.min(Math.abs(nextTurningAngle), maxAngle)
   }
 
-  def calculateNextMovement(state: LadybugState) = state.stage match {
+  def calculateNextMovement(state: LadybugState): (LadybugState, Vec2d) = state.stage match {
     case Stage.egg | Stage.dead => (state, Vec2d.none)
     case stage => {
       val nextTurningAngle =
@@ -139,11 +120,6 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
     }
   }
 
-  def advanceState(state: LadybugState): LadybugState = {
-    context.become(default(state))
-    state
-  }
-
   def handleMovement(state: LadybugState, position: LadybugPosition): LadybugState = {
     state.copy(blocked = false)
   }
@@ -158,21 +134,44 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
     }
   }
 
-  def handleNearbyLadybugs(state: LadybugState, nearbyLadybugs: Seq[ActorRef]) = {
-    if (state.pregnancyPossible)
-      nearbyLadybugs.foreach(_ ! ReproductionRequest())
-  }
-
-  def potentiallyGiveBirth(state: LadybugState, position: LadybugPosition) = {
+  def potentiallyLayEgg(state: LadybugState, position: LadybugPosition): LadybugState = {
     if (state.pregnant && state.birthTime == 0) {
       val angleRadian = state.directionAngle * Math.PI / 180
       val birthPosition = -Vec2d.right.rotate(angleRadian)
       for (_ <- 1 to state.eggs) {
-        sender() ! Spawn(Some(position.copy(pos = position.pos + birthPosition)), Some(0))
+        layEgg(position.copy(pos = position.pos + birthPosition))
       }
       state.copy(eggs = 0)
     }
     else state
+  }
+
+  def layEgg(position: LadybugPosition): Unit
+}
+
+object Ladybug {
+
+  case class Movement(self: String, position: LadybugPosition, state: LadybugState)
+
+  case class ReproductionRequest()
+  case class ReproductionResponse(gender: Gender, stage: Stage)
+
+  def props(selfId: String, maybeAge: Option[Int]) = {
+    val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
+    Props(classOf[Ladybug], selfId, state)
+  }
+}
+
+class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor with LadybugBehaviour with ActorLogging {
+
+  import Ladybug._
+  import LadybugArena._
+
+  override def receive = default(initialState)
+
+  def advanceState(state: LadybugState): LadybugState = {
+    context.become(default(state))
+    state
   }
 
   def default(state: LadybugState): Receive = {
@@ -194,7 +193,7 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
         if (ok) handleMovement(state, position)
         else handleBlocked(state)
 
-      advanceState(potentiallyGiveBirth(newState, position))
+      advanceState(potentiallyLayEgg(newState, position))
 
       context.system.eventStream.publish(Movement(selfId, position, newState))
     }
@@ -204,5 +203,14 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
     case ReproductionResponse(otherGender, otherStage) => {
       advanceState(state.tryBecomePregnant(otherGender, otherStage))
     }
+  }
+
+  def handleNearbyLadybugs(state: LadybugState, nearbyLadybugs: Seq[ActorRef]) = {
+    if (state.pregnancyPossible)
+      nearbyLadybugs.foreach(_ ! ReproductionRequest())
+  }
+
+  override def layEgg(position: LadybugPosition): Unit = {
+    sender() ! Spawn(Some(position), Some(0))
   }
 }
