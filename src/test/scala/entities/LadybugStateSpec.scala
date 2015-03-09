@@ -32,7 +32,7 @@ class LadybugStateSpec extends WordSpec with Matchers {
         fPercent  <- Seq(0, 89, 90, 100)
       }
       yield {
-        val fExpected =
+        val fertileExpected =
           if (age != adultAge) false
           else if (gender == Gender.male) true
           else if (fPercent < 90) false
@@ -40,7 +40,26 @@ class LadybugStateSpec extends WordSpec with Matchers {
 
         val state = LadybugState(age = age, gender = gender, fertilityPercent = fPercent)
 
-        assert(state.fertile == fExpected, s"state=$state, fExpected=${fExpected}")
+        assert(state.fertile == fertileExpected, s"state=$state, fertileExpected=$fertileExpected")
+      }
+    }
+
+    "calculate pregnant based on gender, birthTime and eggs" in {
+      for {
+        gender    <- Gender.values
+        birthTime <- Seq(-1, 0, 1)
+        eggs      <- Seq(0, 1, 2)
+      }
+      yield {
+        val pregnantExpected =
+          if (gender == Gender.male) false
+          else if (birthTime < 0) false
+          else if (eggs <= 0) false
+          else true
+
+        val state = LadybugState(gender = gender, birthTime = birthTime, eggs = eggs)
+
+        assert(state.pregnant == pregnantExpected, s"state=$state, pregnantExpected=$pregnantExpected")
       }
     }
   }
