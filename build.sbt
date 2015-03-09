@@ -5,7 +5,7 @@ name := """reactive-ladybugs"""
 
 version := "1.0"
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.6"
 
 resolvers ++= Seq(
   "spray repo" at "http://repo.spray.io",
@@ -14,7 +14,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.1.6" % "test",
-  "com.wandoulabs.akka" %% "spray-websocket" % "0.1.3",
+  "com.wandoulabs.akka" %% "spray-websocket" % "0.1.4",
   "io.spray" %%  "spray-json" % "1.2.6",
   "org.webjars" % "normalize.css" % "3.0.2",
   "org.webjars" % "jquery" % "2.1.1",
