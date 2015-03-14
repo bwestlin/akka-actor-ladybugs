@@ -13,12 +13,14 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.1.6" % "test",
-  "com.wandoulabs.akka" %% "spray-websocket" % "0.1.4",
-  "io.spray" %%  "spray-json" % "1.2.6",
-  "org.webjars" % "normalize.css" % "3.0.2",
-  "org.webjars" % "jquery" % "2.1.1",
-  "org.webjars" % "lodash" % "2.4.1-6"
+  "com.typesafe.akka"         %% "akka-actor"       % "2.3.9" withSources(),
+  "com.typesafe.akka"         %% "akka-slf4j"       % "2.3.9",
+  "io.spray"                  %% "spray-json"       % "1.3.1",
+  "com.wandoulabs.akka"       %% "spray-websocket"  % "0.1.4",
+  "org.webjars"               %  "normalize.css"    % "3.0.2",
+  "org.webjars"               %  "jquery"           % "2.1.1",
+  "org.webjars"               %  "lodash"           % "2.4.1-6",
+  "org.scalatest"             %% "scalatest"        % "2.2.4" % "test"
 )
 
 Revolver.settings
