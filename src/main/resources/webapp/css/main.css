@@ -2,10 +2,29 @@ body {
   background-color: #FFFFFF;
 }
 
+h1 {
+  text-shadow: 0 0 2px #20431d;
+  color: #3e9233;
+}
+
+h1 a.akka {
+  color: blue;
+  font-style: italic;
+}
+
 #container {
   position: relative;
   width: 868px;
   margin: 20px auto;
+}
+
+#container > h1,
+#container > p {
+  margin-left: 30px;
+}
+
+#container > p {
+  font-size: 90%;
 }
 
 #arena-fence {
