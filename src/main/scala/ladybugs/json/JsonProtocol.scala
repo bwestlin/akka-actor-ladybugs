@@ -1,9 +1,6 @@
 package ladybugs.json
 
-import ladybugs.calculation.Vec2d
-import ladybugs.entities.{LadybugPosition, Gender, LadybugState}
 import ladybugs.entities.Ladybug.Movement
-import akka.actor.ActorRef
 import spray.json._
 
 object JsonProtocol extends DefaultJsonProtocol {
