@@ -147,7 +147,9 @@ var LadybugHandler = (function () {
     }
 
     if (ladybug.stage == "annihilated") {
-      $elem.remove();
+      $elem.fadeOut(4000, function () {
+        $(this).remove();
+      });
       positions.splice(idx, 1);
       return;
     }
@@ -184,9 +186,8 @@ var LadybugHandler = (function () {
 
   function stepAnim() {
     animStep += 1;
-    setTimeout(stepAnim, animSleep);
   }
-  setTimeout(stepAnim, animSleep);
+  setInterval(stepAnim, animSleep);
 
   return {
     updatePosition: updatePosition
