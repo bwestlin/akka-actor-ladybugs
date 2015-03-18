@@ -63,6 +63,15 @@ h1 a.akka {
   xbackground-color: blue;
   background-repeat: no-repeat;
   background-position: inherit;
+  cursor: pointer;
+}
+
+.ladybug.selected:before {
+  border: 2px solid orange;
+  margin-left: -2px;
+  margin-top: -2px;
+  border-radius: 30px;
+  background-color: rgba(255, 162, 0, 0.31);
 }
 
 .ladybug.egg:before {
@@ -95,6 +104,19 @@ h1 a.akka {
 
 .ladybug.dead:before {
   background-image: url('/images/ladybug_dead.png');
+}
+
+#info {
+  background-color: beige;
+  border: 2px solid #d4d4bd;
+  border-radius: 10px;
+  padding: 5px 10px 5px 10px;
+  z-index: 10;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  pointer-events: none;
+  font-size: 70%;
 }
 
 #msgsPerSec {

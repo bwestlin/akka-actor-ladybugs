@@ -73,6 +73,52 @@ var LadybugHandler = (function () {
   var animStep = 0;
   var animSleep = 100;
 
+  var selectedLadybugId;
+
+  $(function () {
+    var $arena = $("#arena");
+    $arena.on("click", "div.ladybug", function (e) {
+      selectLadybug($(this).attr("id"));
+      //$(this).toggleClass("selected");
+      e.stopPropagation();
+      return false;
+    });
+    $arena.on("click", function () {
+      selectLadybug();
+    });
+  });
+
+  function selectLadybug(id) {
+    console.log("selectLadybug(" + id + ")");
+    var $arena = $("#arena");
+    var $info = $("#info");
+    if (selectedLadybugId) {
+      $arena.find("#" + selectedLadybugId).removeClass("selected");
+      selectedLadybugId = null;
+      $info.hide();
+    }
+
+    if (id) {
+      if ($info.length == 0) {
+        $info = $('<div id="info"></div>');
+      }
+
+      selectedLadybugId = id;
+      $arena.find("#" + selectedLadybugId).addClass("selected").append($info);
+      $info.show();
+    }
+  }
+
+  function updateSelectedInfo(ladybug) {
+    if (selectedLadybugId === ladybug.self) {
+      var $info = $("#info");
+
+      var json = JSON.stringify(ladybug, null, ' ')
+      //console.log("json:", json);
+      $info.html("<pre>" + json + "</pre>");
+    }
+  }
+
   function bounded(value, bounds) {
     if (value < 0) {
       value = (value % bounds) + bounds;
@@ -132,6 +178,8 @@ var LadybugHandler = (function () {
       .removeClass("egg child adult old dead")
       .addClass(ladybug.state.stage)
       /*.text(angle)*/;
+
+    updateSelectedInfo(ladybug);
   }
 
   function stepAnim() {
