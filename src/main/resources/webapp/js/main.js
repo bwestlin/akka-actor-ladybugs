@@ -110,7 +110,7 @@ var LadybugHandler = (function () {
   }
 
   function updateSelectedInfo(ladybug) {
-    if (selectedLadybugId === ladybug.self) {
+    if (selectedLadybugId === ladybug.id) {
       var $info = $("#info");
 
       var json = JSON.stringify(ladybug, null, ' ')
@@ -129,7 +129,7 @@ var LadybugHandler = (function () {
   function updatePosition(ladybug) {
     //console.log("updatePosition(" + ladybug + ")");
     var idx = _.findIndex(positions, function (obj) {
-      return obj.self === ladybug.self;
+      return obj.self === ladybug.id;
     });
 
     if (idx >= 0) {
@@ -140,13 +140,13 @@ var LadybugHandler = (function () {
       positions.push(ladybug);
     }
 
-    var id = ladybug.self;
+    var id = ladybug.id;
     var $elem = $("#" + id);
     if ($elem.length == 0) {
-      $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.state.gender).appendTo("#arena");
+      $elem = $('<div class="ladybug" id="' + id + '"></div>').addClass(ladybug.gender).appendTo("#arena");
     }
 
-    if (ladybug.state.stage == "annihilated") {
+    if (ladybug.stage == "annihilated") {
       $elem.remove();
       positions.splice(idx, 1);
       return;
@@ -158,9 +158,9 @@ var LadybugHandler = (function () {
       adult: { width: 40, numImages: 32, numFrames: 4 },
       old:   { width: 40, numImages: 32, numFrames: 4, animDevisor: 3 },
       dead:  { width: 40, numImages: 32, numFrames: 1 }
-    }[ladybug.state.stage];
+    }[ladybug.stage];
 
-    var angle = bounded(parseInt(ladybug.state.directionAngle) * -1, 360);
+    var angle = bounded(parseInt(ladybug.dir) * -1, 360);
     var degreesPerImageStep = 360 / stageInfo.numImages;
     var rotateImageStep = parseInt((angle + (degreesPerImageStep / 2)) / degreesPerImageStep) % stageInfo.numImages;
     var bgPosX = rotateImageStep * stageInfo.width * -1;
@@ -171,12 +171,12 @@ var LadybugHandler = (function () {
 
     $elem
       .css({
-        "left": parseInt(ladybug.position.pos.x) + "px",
-        "top":  parseInt(ladybug.position.pos.y) + "px",
+        "left": parseInt(ladybug.pos[0]) + "px",
+        "top":  parseInt(ladybug.pos[1]) + "px",
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
       .removeClass("egg child adult old dead")
-      .addClass(ladybug.state.stage)
+      .addClass(ladybug.stage)
       /*.text(angle)*/;
 
     updateSelectedInfo(ladybug);
