@@ -147,9 +147,10 @@ var LadybugHandler = (function () {
     }
 
     if (ladybug.stage == "annihilated") {
-      $elem.fadeOut(4000, function () {
-        $(this).remove();
-      });
+      $elem.addClass(ladybug.stage);
+      setTimeout(function () {
+        $elem.remove();
+      }, 2000);
       positions.splice(idx, 1);
       return;
     }
@@ -211,18 +212,18 @@ $(function () {
   /*
   var _angle = 0;
   var f = function () {
+    var stage = ["child", "adult", "old", "dead", "annihilated"][((_angle / 360) | 0) % 5];
     LadybugHandler.updatePosition({
-      "self": "self",
-      "state": {
-        "x": 100,
-        "y": 100,
-        "directionAngle": _angle
-      }
+      "id": "self",
+      "pos": [100, 100],
+      "stage": stage,
+      "gender": "male",
+      "dir": _angle
     });
-    _angle += 1
-
-    setTimeout(f, 500);
+    if (stage == "annihilated") return;
+    _angle += 10;
+    setTimeout(f, 100);
   };
-  setTimeout(f, 500);
+  setTimeout(f, 100);
   */
 });
