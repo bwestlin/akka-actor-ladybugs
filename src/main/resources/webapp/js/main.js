@@ -175,8 +175,7 @@ var LadybugHandler = (function () {
         "background-position": bgPosX + "px " + bgPosY + "px"
       })
       .removeClass("egg child adult old dead")
-      .addClass(ladybug.stage)
-      /*.text(angle)*/;
+      .addClass(ladybug.stage);
 
     updateSelectedInfo(ladybug);
   }
