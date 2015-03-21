@@ -129,7 +129,7 @@ var LadybugHandler = (function () {
   function updatePosition(ladybug) {
     //console.log("updatePosition(" + ladybug + ")");
     var idx = _.findIndex(positions, function (obj) {
-      return obj.self === ladybug.id;
+      return obj.id === ladybug.id;
     });
 
     if (idx >= 0) {
