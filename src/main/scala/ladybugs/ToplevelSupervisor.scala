@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.io.IO
 import ladybugs.entities.LadybugArena
 import ladybugs.entities.LadybugArena.Spawn
-import ladybugs.http.{HttpServer, LadybugWebsocketUpdater}
+import ladybugs.http.{HttpServer, WebsocketUpdater}
 import spray.can.Http
 import spray.can.server.UHttp
 
@@ -28,7 +28,7 @@ class ToplevelSupervisor extends Actor {
 
   for (_ <- 1 to 20) arena ! Spawn(maybeAge = Some((50 + Random.nextInt(50)) * 10))
 
-  val updater = context.actorOf(LadybugWebsocketUpdater.props(), "updater")
+  val updater = context.actorOf(WebsocketUpdater.props(), "updater")
 
   def receive = {
     case _ =>

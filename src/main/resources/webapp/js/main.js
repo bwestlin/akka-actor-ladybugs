@@ -200,9 +200,9 @@ $(function () {
   WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
   WS.listener(function (message) {
     //console.log("message=", message);
-    var json = JSON.parse(message);
-    //console.log("json:", json);
-    LadybugHandler.updatePosition(json);
+    var movements = JSON.parse(message);
+    //console.log("movements:", movements);
+    _.each(movements, LadybugHandler.updatePosition);
   });
 
   WS.listener(InvokeCounter.counterFunction(1000, function (count) {

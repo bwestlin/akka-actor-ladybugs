@@ -201,8 +201,7 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
         else handleBlocked(state)
 
       advanceState(potentiallyLayEgg(newState, position))
-
-      context.system.eventStream.publish(Movement(selfId, position, newState))
+      context.parent ! Movement(selfId, position, newState)
 
     case ReproductionRequest() =>
       sender() ! ReproductionResponse(state.gender, state.stage)

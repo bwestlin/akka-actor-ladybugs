@@ -2,6 +2,7 @@ package ladybugs.entities
 
 import akka.actor._
 import ladybugs.calculation.Vec2d
+import ladybugs.entities.Ladybug.Movement
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -27,7 +28,7 @@ object LadybugArena {
   case class InitiateMovement() extends Request
   case class MovementRequest(direction: Vec2d, radius: Double) extends Request
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: LadybugPosition, nearbyLadybugs: Seq[ActorRef])
-  case class ArenaMovements() extends Response
+  case class ArenaUpdates(movements: Set[Movement]) extends Response
 }
 
 class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
@@ -101,12 +102,18 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
-  def receive = default(Map.empty, 0)
+  def receive = default(Map.empty, 0, Set.empty, Set.empty)
 
-  def default(ladybugs: Map[ActorRef, LadybugPosition], spawnCounter: Int): Receive = {
+  def default(ladybugs: Map[ActorRef, LadybugPosition],
+              spawnCounter: Int,
+              awaitingMovementsFrom: Set[ActorRef],
+              movements: Set[Movement]): Receive = {
 
     case InitiateMovement() =>
       ladybugs.keys.foreach(_ ! Ladybug.LetsMove())
+      context.become(default(ladybugs, spawnCounter, ladybugs.keys.toSet, Set.empty))
+      if (awaitingMovementsFrom.nonEmpty || movements.nonEmpty)
+        log.info("Dropping nonhandled movements because new movement round begun")
 
     case request @ MovementRequest(direction, radius) =>
       ladybugs.get(sender()).foreach { position =>
@@ -117,12 +124,26 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
         val otherLadybugs = ladybugs - sender()
         val ok = positionWithinBounds(requestedPosition) && !positionBlocked(requestedPosition, position, otherLadybugs)
+
         val nextPosition =
           if (ok) requestedPosition
           else adjustPositionWithinBounds(position)
-        if (position != nextPosition) context.become(this.default(ladybugs.updated(sender(), nextPosition), spawnCounter))
+
+        if (position != nextPosition)
+          context.become(this.default(ladybugs.updated(sender(), nextPosition), spawnCounter, awaitingMovementsFrom, movements))
 
         sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
+      }
+
+    case movement @ Movement(_, _, _) =>
+      val restAwaitingMovementsFrom = awaitingMovementsFrom - sender()
+
+      if (restAwaitingMovementsFrom.isEmpty) {
+        context.system.eventStream.publish(ArenaUpdates(movements + movement))
+        context.become(default(ladybugs, spawnCounter, restAwaitingMovementsFrom, Set.empty))
+      }
+      else {
+        context.become(default(ladybugs, spawnCounter, restAwaitingMovementsFrom, movements + movement))
       }
 
     case Spawn(maybePosition, maybeAge) =>
@@ -131,14 +152,14 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
         val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
 
-        val ladybugId = s"ladybug${spawnCounter}"
-        val ladybug = context.system.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
+        val ladybugId = s"ladybug$spawnCounter"
+        val ladybug = context.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
 
         context.watch(ladybug)
-        context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1))
+        context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1, awaitingMovementsFrom, movements))
       }
 
     case Terminated(ladybug) =>
-      context.become(this.default(ladybugs - ladybug, spawnCounter))
+      context.become(this.default(ladybugs - ladybug, spawnCounter, awaitingMovementsFrom - ladybug, movements))
   }
 }
