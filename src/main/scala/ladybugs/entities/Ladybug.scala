@@ -4,6 +4,8 @@ import akka.actor._
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Gender.Gender
 import ladybugs.entities.Stage.Stage
+
+import scala.concurrent.duration._
 import scala.util.Random
 
 object Gender extends Enumeration {
@@ -17,7 +19,6 @@ object Stage extends Enumeration {
   val egg, child, adult, old, dead, annihilated = Value
 
   def fromAge(age: Int) = {
-    import scala.concurrent.duration._
     val ageDuration = LadybugArena.movementInterval * age
 
     if (ageDuration < 10.seconds) egg
@@ -151,21 +152,26 @@ trait LadybugBehaviour {
 
 object Ladybug {
 
-  case class Movement(self: String, position: LadybugPosition, state: LadybugState)
-
-  case class ReproductionRequest()
-  case class ReproductionResponse(gender: Gender, stage: Stage)
-
   def props(selfId: String, maybeAge: Option[Int]) = {
     val state = maybeAge.map(age => LadybugState(age = age)).getOrElse(LadybugState())
     Props(classOf[Ladybug], selfId, state)
   }
+
+  sealed trait Request
+  sealed trait Response
+
+  case class LetsMove() extends Request
+
+  case class ReproductionRequest() extends Request
+  case class ReproductionResponse(gender: Gender, stage: Stage) extends Response
+
+  case class Movement(self: String, position: LadybugPosition, state: LadybugState) extends Response
 }
 
 class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor with LadybugBehaviour with ActorLogging {
 
-  import Ladybug._
-  import LadybugArena._
+  import ladybugs.entities.Ladybug._
+  import ladybugs.entities.LadybugArena._
 
   override def receive = default(initialState)
 
@@ -175,7 +181,8 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
   }
 
   def default(state: LadybugState): Receive = {
-    case LetsMove() => {
+
+    case LetsMove() =>
       if (state.stage == Stage.annihilated) {
         self ! PoisonPill
       }
@@ -185,8 +192,8 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
         sender() ! MovementRequest(nextDirection, radius(state))
         advanceState(nextState)
       }
-    }
-    case MovementRequestResponse(ok, request, position, nearbyLadybugs) => {
+
+    case MovementRequestResponse(ok, request, position, nearbyLadybugs) =>
       handleNearbyLadybugs(state, nearbyLadybugs)
 
       val newState =
@@ -196,13 +203,13 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
       advanceState(potentiallyLayEgg(newState, position))
 
       context.system.eventStream.publish(Movement(selfId, position, newState))
-    }
-    case ReproductionRequest() => {
+
+    case ReproductionRequest() =>
       sender() ! ReproductionResponse(state.gender, state.stage)
-    }
-    case ReproductionResponse(otherGender, otherStage) => {
+
+    case ReproductionResponse(otherGender, otherStage) =>
       advanceState(state.tryBecomePregnant(otherGender, otherStage))
-    }
+
   }
 
   def handleNearbyLadybugs(state: LadybugState, nearbyLadybugs: Seq[ActorRef]) = {
