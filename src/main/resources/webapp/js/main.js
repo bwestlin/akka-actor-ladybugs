@@ -89,7 +89,6 @@ var LadybugHandler = (function () {
   });
 
   function selectLadybug(id) {
-    console.log("selectLadybug(" + id + ")");
     var $arena = $("#arena");
     var $info = $("#info");
     if (selectedLadybugId) {
@@ -114,7 +113,6 @@ var LadybugHandler = (function () {
       var $info = $("#info");
 
       var json = JSON.stringify(ladybug, null, ' ')
-      //console.log("json:", json);
       $info.html("<pre>" + json + "</pre>");
     }
   }
@@ -127,7 +125,6 @@ var LadybugHandler = (function () {
   }
 
   function updatePosition(ladybug) {
-    //console.log("updatePosition(" + ladybug + ")");
     var idx = _.findIndex(positions, function (obj) {
       return obj.id === ladybug.id;
     });
@@ -168,7 +165,6 @@ var LadybugHandler = (function () {
     var rotateImageStep = parseInt((angle + (degreesPerImageStep / 2)) / degreesPerImageStep) % stageInfo.numImages;
     var bgPosX = rotateImageStep * stageInfo.width * -1;
     if (bgPosX > 0) bgPosX -= (stageInfo.width * stageInfo.numImages);
-    //console.log("angle=" + angle + ", rotateImageStep=" + rotateImageStep + ", bgPosX=" + bgPosX + ", degreesPerImageStep=" + degreesPerImageStep);
     var animStepDivisor = stageInfo.animDevisor || 1;
     var bgPosY = (parseInt(animStep / animStepDivisor) % stageInfo.numFrames) * stageInfo.width * -1;
 
@@ -199,9 +195,7 @@ $(function () {
 
   WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
   WS.listener(function (message) {
-    //console.log("message=", message);
     var movements = JSON.parse(message);
-    //console.log("movements:", movements);
     _.each(movements, LadybugHandler.updatePosition);
   });
 
