@@ -77,10 +77,12 @@ var LadybugHandler = (function () {
   $(function () {
     var $arena = $("#arena");
     $arena.on("click", "div.ladybug", function (e) {
-      selectLadybug($(this).attr("id"));
-      //$(this).toggleClass("selected");
-      e.stopPropagation();
-      return false;
+      if (!e.ctrlKey) {
+        selectLadybug($(this).attr("id"));
+        //$(this).toggleClass("selected");
+        e.stopPropagation();
+        return false;
+      }
     });
     $arena.on("click", function (e) {
       selectLadybug();
