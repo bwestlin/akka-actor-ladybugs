@@ -16,6 +16,8 @@ class LadybugStateSpec extends WordSpec with Matchers {
 
     val ages = Seq(eggAge, childAge, adultAge, oldAge, deadAge, annihAge)
 
+    val fertileNonPregnantFemale = LadybugState(gender = Gender.female, age = adultAge, fertilityPercent = 90, eggs = 0)
+
     "calculate stage from age" in {
       for {
         (age, stage) <- ages zip Stage.values
@@ -60,6 +62,29 @@ class LadybugStateSpec extends WordSpec with Matchers {
         val state = LadybugState(gender = gender, birthTime = birthTime, eggs = eggs)
 
         assert(state.pregnant == pregnantExpected, s"state=$state, pregnantExpected=$pregnantExpected")
+      }
+    }
+
+    "answer whether pregnancy is possible based on gender, being fertile and not pregnant" in {
+      fertileNonPregnantFemale.pregnancyPossible shouldBe true
+      fertileNonPregnantFemale.copy(gender = Gender.male).pregnancyPossible shouldBe false
+    }
+
+    "become pregnant in the right circumstances" in {
+      for {
+        otherGender <- Gender.values
+        otherStage  <- Stage.values
+        _           <- 1 to 20 // Repeat to test randomizity
+      } {
+        val pregnantStage = fertileNonPregnantFemale.tryBecomePregnant(otherGender, otherStage)
+        if (otherGender == Gender.male && otherStage == Stage.adult) {
+          pregnantStage.birthTime shouldBe 200
+          pregnantStage.eggs shouldBe 2 +- 1
+        }
+        else {
+          pregnantStage.birthTime shouldBe 0
+          pregnantStage.eggs shouldBe 0
+        }
       }
     }
   }
