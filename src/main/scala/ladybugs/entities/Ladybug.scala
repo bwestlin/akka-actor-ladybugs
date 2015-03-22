@@ -121,7 +121,7 @@ trait LadybugBehaviour {
     }
   }
 
-  def handleMovement(state: LadybugState, position: LadybugPosition): LadybugState = {
+  def handleMovement(state: LadybugState, position: Position): LadybugState = {
     state.copy(blocked = false)
   }
 
@@ -135,7 +135,7 @@ trait LadybugBehaviour {
     }
   }
 
-  def potentiallyLayEgg(state: LadybugState, position: LadybugPosition): LadybugState = {
+  def potentiallyLayEgg(state: LadybugState, position: Position): LadybugState = {
     if (state.pregnant && state.birthTime == 0) {
       val angleRadian = state.directionAngle * Math.PI / 180
       val birthPosition = -Vec2d.right.rotate(angleRadian)
@@ -147,7 +147,7 @@ trait LadybugBehaviour {
     else state
   }
 
-  def layEgg(position: LadybugPosition): Unit
+  def layEgg(position: Position): Unit
 }
 
 object Ladybug {
@@ -165,7 +165,7 @@ object Ladybug {
   case class ReproductionRequest() extends Request
   case class ReproductionResponse(gender: Gender, stage: Stage) extends Response
 
-  case class Movement(self: String, position: LadybugPosition, state: LadybugState) extends Response
+  case class Movement(self: String, position: Position, state: LadybugState) extends Response
 }
 
 class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor with LadybugBehaviour with ActorLogging {
@@ -216,7 +216,7 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
       nearbyLadybugs.foreach(_ ! ReproductionRequest())
   }
 
-  override def layEgg(position: LadybugPosition): Unit = {
+  override def layEgg(position: Position): Unit = {
     sender() ! Spawn(Some(position), Some(0))
   }
 }

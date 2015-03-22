@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
   "org.webjars"         %  "normalize.css"    % "3.0.2",
   "org.webjars"         %  "jquery"           % "2.1.1",
   "org.webjars"         %  "lodash"           % "2.4.1-6",
-  "org.scalatest"       %% "scalatest"        % "2.2.4" % "test"
+  "org.scalatest"       %% "scalatest"        % "2.2.4" % "test",
+  "com.typesafe.akka"   %% "akka-testkit"     % "2.3.9" % "test" withSources()
 )
 
 Revolver.settings
