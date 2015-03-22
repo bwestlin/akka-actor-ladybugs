@@ -50,7 +50,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
   def movementWithinBounds(reqP: Position, currP: Position): Boolean =
     (reqP, currP) match {
       case (Position(Vec2d(rX, _), r), Position(Vec2d(cX, _), _)) if rX - r < 0       && rX < cX => false
-      case (Position(Vec2d(rX, _), r), Position(Vec2d(cX, _), _)) if rX + r >= height && rX > cX => false
+      case (Position(Vec2d(rX, _), r), Position(Vec2d(cX, _), _)) if rX + r >= width  && rX > cX => false
       case (Position(Vec2d(_, rY), r), Position(Vec2d(_, cY), _)) if rY - r < 0       && rY < cY => false
       case (Position(Vec2d(_, rY), r), Position(Vec2d(_, cY), _)) if rY + r >= height && rY > cY => false
       case _ => true

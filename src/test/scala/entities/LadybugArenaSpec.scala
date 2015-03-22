@@ -15,7 +15,7 @@ class LadybugArenaSpec extends TestKit(SQSDeleterSpec.actorSystem)
   "LadybugArena" should {
 
     "allow movements outside of bounds as long as the movement is going more into bounds" in {
-      val arenaRef = TestActorRef[LadybugArena](LadybugArena.props(100, 100))
+      val arenaRef = TestActorRef[LadybugArena](LadybugArena.props(100, 200))
       val arena = arenaRef.underlyingActor
 
       val pos1 = Position(Vec2d(0, 0))
@@ -34,7 +34,7 @@ class LadybugArenaSpec extends TestKit(SQSDeleterSpec.actorSystem)
       arena.movementWithinBounds(pos2.copy(pos = pos2.pos + Vec2d( 0,  1)), pos2) shouldBe true
       arena.movementWithinBounds(pos2.copy(pos = pos2.pos + Vec2d(-1,  1)), pos2) shouldBe true
 
-      val pos3 = Position(Vec2d(0, 100))
+      val pos3 = Position(Vec2d(0, 200))
       arena.movementWithinBounds(pos3.copy(pos = pos3.pos + Vec2d(-1,  1)), pos3) shouldBe false
       arena.movementWithinBounds(pos3.copy(pos = pos3.pos + Vec2d(-1,  0)), pos3) shouldBe false
       arena.movementWithinBounds(pos3.copy(pos = pos3.pos + Vec2d( 0,  1)), pos3) shouldBe false
@@ -42,7 +42,7 @@ class LadybugArenaSpec extends TestKit(SQSDeleterSpec.actorSystem)
       arena.movementWithinBounds(pos3.copy(pos = pos3.pos + Vec2d( 0, -1)), pos3) shouldBe true
       arena.movementWithinBounds(pos3.copy(pos = pos3.pos + Vec2d( 1, -1)), pos3) shouldBe true
 
-      val pos4 = Position(Vec2d(100, 100))
+      val pos4 = Position(Vec2d(100, 200))
       arena.movementWithinBounds(pos4.copy(pos = pos4.pos + Vec2d( 1,  1)), pos4) shouldBe false
       arena.movementWithinBounds(pos4.copy(pos = pos4.pos + Vec2d( 1,  0)), pos4) shouldBe false
       arena.movementWithinBounds(pos4.copy(pos = pos4.pos + Vec2d( 0,  1)), pos4) shouldBe false
