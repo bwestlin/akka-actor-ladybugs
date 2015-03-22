@@ -29,6 +29,11 @@ object LadybugArena {
   case class MovementRequest(direction: Vec2d, radius: Double) extends Request
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: Position, nearbyLadybugs: Seq[ActorRef])
   case class ArenaUpdates(movements: Set[Movement]) extends Response
+
+  private case class LadybugArenaState(ladybugs: Map[ActorRef, Position],
+                                       spawnCounter: Int,
+                                       awaitingMovementsFrom: Set[ActorRef],
+                                       movements: Set[Movement])
 }
 
 class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
@@ -107,27 +112,27 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
-  def receive = default(Map.empty, 0, Set.empty, Set.empty)
+  def receive = default(LadybugArenaState(Map.empty, 0, Set.empty, Set.empty))
 
-  def default(ladybugs: Map[ActorRef, Position],
-              spawnCounter: Int,
-              awaitingMovementsFrom: Set[ActorRef],
-              movements: Set[Movement]): Receive = {
+  def default(state: LadybugArenaState): Receive = {
 
     case InitiateMovement() =>
-      ladybugs.keys.foreach(_ ! Ladybug.LetsMove())
-      context.become(default(ladybugs, spawnCounter, ladybugs.keys.toSet, Set.empty))
-      if (awaitingMovementsFrom.nonEmpty || movements.nonEmpty)
+      state.ladybugs.keys.foreach(_ ! Ladybug.LetsMove())
+      context.become(default(state.copy(
+        awaitingMovementsFrom = state.ladybugs.keys.toSet,
+        movements = Set.empty
+      )))
+      if (state.awaitingMovementsFrom.nonEmpty || state.movements.nonEmpty)
         log.info("Dropping nonhandled movements because new movement round begun")
 
     case request @ MovementRequest(direction, radius) =>
-      ladybugs.get(sender()).foreach { position =>
+      state.ladybugs.get(sender()).foreach { position =>
         val requestedPosition = Position(
           position.pos + direction,
           radius
         )
 
-        val otherLadybugs = ladybugs - sender()
+        val otherLadybugs = state.ladybugs - sender()
         val ok =
           movementWithinBounds(requestedPosition, position) &&
           !positionBlocked(requestedPosition, position, otherLadybugs)
@@ -136,37 +141,52 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
           if (ok) requestedPosition
           else position
 
-        if (position != nextPosition)
-          context.become(this.default(ladybugs.updated(sender(), nextPosition), spawnCounter, awaitingMovementsFrom, movements))
+        if (position != nextPosition) {
+          context.become(default(state.copy(
+            ladybugs = state.ladybugs.updated(sender(), nextPosition)
+          )))
+        }
 
         sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
       }
 
     case movement @ Movement(_, _, _) =>
-      val restAwaitingMovementsFrom = awaitingMovementsFrom - sender()
+      val restAwaitingMovementsFrom = state.awaitingMovementsFrom - sender()
 
       if (restAwaitingMovementsFrom.isEmpty) {
-        context.system.eventStream.publish(ArenaUpdates(movements + movement))
-        context.become(default(ladybugs, spawnCounter, restAwaitingMovementsFrom, Set.empty))
+        context.system.eventStream.publish(ArenaUpdates(state.movements + movement))
+        context.become(default(state.copy(
+          awaitingMovementsFrom = restAwaitingMovementsFrom,
+          movements = Set.empty
+        )))
       }
       else {
-        context.become(default(ladybugs, spawnCounter, restAwaitingMovementsFrom, movements + movement))
+        context.become(default(state.copy(
+          awaitingMovementsFrom = restAwaitingMovementsFrom,
+          movements = state.movements + movement
+        )))
       }
 
     case Spawn(maybePosition, maybeAge) =>
-      if (ladybugs.size < 100) {
+      if (state.ladybugs.size < 100) {
         val position = maybePosition.getOrElse(Position(Vec2d(Random.nextInt(width), Random.nextInt(height))))
 
-        val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, ladybugs))
+        val adjustedPosition = adjustPositionWithinBounds(adjustPositionIfOverlapped(position, state.ladybugs))
 
-        val ladybugId = s"ladybug$spawnCounter"
+        val ladybugId = s"ladybug${state.spawnCounter}"
         val ladybug = context.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
 
         context.watch(ladybug)
-        context.become(this.default(ladybugs + (ladybug -> adjustedPosition), spawnCounter + 1, awaitingMovementsFrom, movements))
+        context.become(default(state.copy(
+          ladybugs = state.ladybugs + (ladybug -> adjustedPosition),
+          spawnCounter = state.spawnCounter + 1
+        )))
       }
 
     case Terminated(ladybug) =>
-      context.become(this.default(ladybugs - ladybug, spawnCounter, awaitingMovementsFrom - ladybug, movements))
+      context.become(default(state.copy(
+        ladybugs = state.ladybugs - ladybug,
+        awaitingMovementsFrom = state.awaitingMovementsFrom - ladybug
+      )))
   }
 }
