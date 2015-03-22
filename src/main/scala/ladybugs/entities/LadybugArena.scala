@@ -23,17 +23,23 @@ object LadybugArena {
 
   sealed trait Request
   sealed trait Response
+  sealed trait Subscribes
+  sealed trait Publishes
 
   case class Spawn(maybePosition: Option[Position] = None, maybeAge: Option[Int] = None) extends Request
   case class InitiateMovement() extends Request
   case class MovementRequest(direction: Vec2d, radius: Double) extends Request
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: Position, nearbyLadybugs: Seq[ActorRef])
-  case class ArenaUpdates(movements: Set[Movement]) extends Response
+
+  case class ArenaUpdates(movements: Set[Movement], numParticipants: Int) extends Publishes
+  case class ArenaParticipationRequest(participator: ActorRef) extends Subscribes
+  case class ArenaParticipationResponse() extends Response
 
   private case class LadybugArenaState(ladybugs: Map[ActorRef, Position],
                                        spawnCounter: Int,
                                        awaitingMovementsFrom: Set[ActorRef],
-                                       movements: Set[Movement])
+                                       movements: Set[Movement],
+                                       participants: Set[ActorRef])
 }
 
 class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
@@ -42,9 +48,12 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
   val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
 
+  context.system.eventStream.subscribe(self, classOf[ArenaParticipationRequest])
+
   override def postStop(): Unit = {
     super.postStop()
     mover.cancel()
+    context.system.eventStream.unsubscribe(self)
   }
 
   def movementWithinBounds(reqP: Position, currP: Position): Boolean =
@@ -112,7 +121,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
-  def receive = default(LadybugArenaState(Map.empty, 0, Set.empty, Set.empty))
+  def receive = default(LadybugArenaState(Map.empty, 0, Set.empty, Set.empty, Set.empty))
 
   def default(state: LadybugArenaState): Receive = {
 
@@ -154,7 +163,9 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
       val restAwaitingMovementsFrom = state.awaitingMovementsFrom - sender()
 
       if (restAwaitingMovementsFrom.isEmpty) {
-        context.system.eventStream.publish(ArenaUpdates(state.movements + movement))
+        context.system.eventStream.publish(
+          ArenaUpdates(state.movements + movement, state.participants.size)
+        )
         context.become(default(state.copy(
           awaitingMovementsFrom = restAwaitingMovementsFrom,
           movements = Set.empty
@@ -183,10 +194,23 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         )))
       }
 
-    case Terminated(ladybug) =>
+    case Terminated(ladybug) if state.ladybugs.contains(ladybug) =>
       context.become(default(state.copy(
         ladybugs = state.ladybugs - ladybug,
         awaitingMovementsFrom = state.awaitingMovementsFrom - ladybug
       )))
+
+    case ArenaParticipationRequest(participator) =>
+      context.watch(participator)
+      participator ! ArenaParticipationResponse()
+      context.become(default(state.copy(
+        participants = state.participants + participator
+      )))
+
+    case Terminated(participator) if state.participants.contains(participator) =>
+      context.become(default(state.copy(
+        participants = state.participants - participator
+      )))
+
   }
 }

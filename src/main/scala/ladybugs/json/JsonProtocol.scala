@@ -1,6 +1,8 @@
 package ladybugs.json
 
 import ladybugs.entities.Ladybug.Movement
+import ladybugs.entities.LadybugArena.ArenaUpdates
+import ladybugs.http.WebsocketConnection
 import spray.json._
 
 object JsonProtocol extends DefaultJsonProtocol {
@@ -18,4 +20,7 @@ object JsonProtocol extends DefaultJsonProtocol {
     }
   }
 
+  implicit val arenaUpdatesFormat = jsonFormat2(ArenaUpdates.apply)
+
+  implicit val wsCommandSpawnFormat = jsonFormat1(WebsocketConnection.Spawn)
 }

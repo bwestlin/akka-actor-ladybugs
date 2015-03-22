@@ -68,7 +68,6 @@ var InvokeCounter = (function () {
 
 
 var LadybugHandler = (function () {
-
   var positions = [];
   var animStep = 0;
   var animSleep = 100;
@@ -83,8 +82,16 @@ var LadybugHandler = (function () {
       e.stopPropagation();
       return false;
     });
-    $arena.on("click", function () {
+    $arena.on("click", function (e) {
       selectLadybug();
+      if (e.ctrlKey) {
+        //console.log("e=", e);
+        WS.send(JSON.stringify({
+          "spawn": {
+            position: [e.offsetX - 4, e.offsetY - 4]
+          }
+        }));
+      }
     });
   });
 
@@ -194,8 +201,9 @@ $(function () {
 
   WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
   WS.listener(function (message) {
-    var movements = JSON.parse(message);
-    _.each(movements, LadybugHandler.updatePosition);
+    var payload = JSON.parse(message);
+    _.each(payload.movements || [], LadybugHandler.updatePosition);
+    //console.log("numParticipants: ", payload.numParticipants);
   });
 
   WS.listener(InvokeCounter.counterFunction(1000, function (count) {

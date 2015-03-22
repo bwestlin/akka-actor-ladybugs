@@ -41,9 +41,17 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
   override def receive = handshaking orElse businessLogicNoWebSocket orElse closeLogic
 
   def businessLogic: Receive = {
+
+    case websocket.UpgradedToWebSocket =>
+      if (context.children.isEmpty)
+        context.actorOf(WebsocketConnection.props())
+
     case PushWS(msg) => send(TextFrame(msg))
 
     case BroadcastWS(msg) => send(TextFrame(msg))
+
+    case tf: TextFrame =>
+      context.children.foreach(_ ! tf)
 
     case x: FrameCommandFailed =>
       log.error("frame command failed", x)

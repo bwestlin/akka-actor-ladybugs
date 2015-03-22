@@ -20,7 +20,7 @@ class WebsocketUpdater extends Actor with ActorLogging {
   }
 
   def receive = {
-    case ArenaUpdates(movements) =>
-      context.system.eventStream.publish(BroadcastWS(movements.toJson.toString()))
+    case au: ArenaUpdates =>
+      context.system.eventStream.publish(BroadcastWS(au.toJson.toString()))
   }
 }
