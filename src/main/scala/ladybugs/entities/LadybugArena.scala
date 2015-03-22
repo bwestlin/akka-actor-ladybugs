@@ -134,7 +134,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
         val nextPosition =
           if (ok) requestedPosition
-          else adjustPositionWithinBounds(position)
+          else position
 
         if (position != nextPosition)
           context.become(this.default(ladybugs.updated(sender(), nextPosition), spawnCounter, awaitingMovementsFrom, movements))
