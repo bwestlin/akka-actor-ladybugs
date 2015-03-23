@@ -2,7 +2,6 @@ package ladybugs.entities
 
 import akka.actor._
 import ladybugs.calculation.Vec2d
-import ladybugs.entities.Gender.Gender
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -49,7 +48,7 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
                         turningAngle: Double = 0,
                         blocked: Boolean = false,
                         age: Int = 0,
-                        gender: Gender = Gender.random,
+                        gender: Gender.Value = Gender.random,
                         fertilityPercent: Int = 100,
                         fertilityDirection: Int = -1,
                         birthTime: Int = 0,
@@ -63,7 +62,7 @@ case class LadybugState(directionAngle: Double = Random.nextDouble() * 360,
 
   def pregnancyPossible = gender == Gender.female && fertile && !pregnant
 
-  def tryBecomePregnant(otherGender: Gender, otherStage: Stage) = {
+  def tryBecomePregnant(otherGender: Gender.Value, otherStage: Stage.Value) = {
     if (pregnancyPossible && gender != otherGender && otherStage == Stage.adult) {
       copy(birthTime = 200, eggs = Random.nextInt(3) + 1)
     }
@@ -178,7 +177,7 @@ object Ladybug {
   case class LetsMove() extends Request
 
   case class ReproductionRequest() extends Request
-  case class ReproductionResponse(gender: Gender, stage: Stage.Value) extends Response
+  case class ReproductionResponse(gender: Gender.Value, stage: Stage.Value) extends Response
 
   case class Movement(self: String, position: Position, state: LadybugState) extends Response
 
