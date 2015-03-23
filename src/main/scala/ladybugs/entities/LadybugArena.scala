@@ -122,16 +122,21 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
+  def advanceState(state: LadybugArenaState): LadybugArenaState = {
+    context.become(default(state))
+    state
+  }
+
   def receive = default(LadybugArenaState(Map.empty, 0, Set.empty, Set.empty, Set.empty))
 
   def default(state: LadybugArenaState): Receive = {
 
     case InitiateMovement() =>
       state.ladybugs.keys.foreach(_ ! Ladybug.LetsMove())
-      context.become(default(state.copy(
+      advanceState(state.copy(
         awaitingMovementsFrom = state.ladybugs.keys.toSet,
         movements = Set.empty
-      )))
+      ))
       if (state.awaitingMovementsFrom.nonEmpty || state.movements.nonEmpty)
         log.info("Dropping nonhandled movements because new movement round begun")
 
@@ -152,9 +157,9 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
           else position
 
         if (position != nextPosition) {
-          context.become(default(state.copy(
+          advanceState(state.copy(
             ladybugs = state.ladybugs.updated(sender(), nextPosition)
-          )))
+          ))
         }
 
         sender() ! MovementRequestResponse(ok, request, nextPosition, nearbyLadybugs(nextPosition, otherLadybugs))
@@ -167,16 +172,16 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         context.system.eventStream.publish(
           ArenaUpdates(state.movements + movement, state.participants.size)
         )
-        context.become(default(state.copy(
+        advanceState(state.copy(
           awaitingMovementsFrom = restAwaitingMovementsFrom,
           movements = Set.empty
-        )))
+        ))
       }
       else {
-        context.become(default(state.copy(
+        advanceState(state.copy(
           awaitingMovementsFrom = restAwaitingMovementsFrom,
           movements = state.movements + movement
-        )))
+        ))
       }
 
     case Spawn(maybePosition, maybeAge) =>
@@ -189,32 +194,32 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         val ladybug = context.actorOf(Ladybug.props(ladybugId, maybeAge), ladybugId)
 
         context.watch(ladybug)
-        context.become(default(state.copy(
+        advanceState(state.copy(
           ladybugs = state.ladybugs + (ladybug -> adjustedPosition),
           spawnCounter = state.spawnCounter + 1
-        )))
+        ))
       }
 
     case Kill(ladybugId) if ladybugId.startsWith("ladybug") =>
       context.child(ladybugId).foreach(_ ! Ladybug.Annihilate())
 
     case Terminated(ladybug) if state.ladybugs.contains(ladybug) =>
-      context.become(default(state.copy(
+      advanceState(state.copy(
         ladybugs = state.ladybugs - ladybug,
         awaitingMovementsFrom = state.awaitingMovementsFrom - ladybug
-      )))
+      ))
 
     case ArenaParticipationRequest(participator) =>
       context.watch(participator)
       participator ! ArenaParticipationResponse()
-      context.become(default(state.copy(
+      advanceState(state.copy(
         participants = state.participants + participator
-      )))
+      ))
 
     case Terminated(participator) if state.participants.contains(participator) =>
-      context.become(default(state.copy(
+      advanceState(state.copy(
         participants = state.participants - participator
-      )))
+      ))
 
   }
 }
