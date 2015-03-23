@@ -14,6 +14,7 @@ object WebsocketConnection {
   sealed trait Command
   case class NoCommand(debug: String) extends Command
   case class Spawn(position: Seq[Int]) extends Command
+  case class Kill(id: String) extends Command
 }
 
 class WebsocketConnection extends Actor with ActorLogging {
@@ -39,6 +40,8 @@ class WebsocketConnection extends Actor with ActorLogging {
       commands.foreach {
         case Spawn(position) =>
           arenaRef ! LadybugArena.Spawn(Some(Position(Vec2d(position(0), position(1)))), Some(100))
+        case Kill(id) =>
+          arenaRef ! LadybugArena.Kill(id)
         case NoCommand(debug) =>
           log.info(s"Unknown command: $debug")
       }
@@ -46,6 +49,7 @@ class WebsocketConnection extends Actor with ActorLogging {
 
   def parseCommand(name: String, jsValue: JsValue): Command = name match {
     case "spawn" => jsValue.convertTo[Spawn]
+    case "kill" => jsValue.convertTo[Kill]
     case _ => NoCommand(s"$name: $jsValue")
   }
 }

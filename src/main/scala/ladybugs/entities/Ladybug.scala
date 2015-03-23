@@ -3,7 +3,6 @@ package ladybugs.entities
 import akka.actor._
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Gender.Gender
-import ladybugs.entities.Stage.Stage
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -27,6 +26,22 @@ object Stage extends Enumeration {
     else if (ageDuration < 250.seconds) old
     else if (ageDuration < 260.seconds) dead
     else annihilated
+  }
+
+  def ageFromStage(stage: Stage.Value): Int = {
+    val secs = stage match {
+      case `egg`    => 0
+      case `child`  => 10
+      case `adult`  => 50
+      case `old`    => 200
+      case `dead`   => 250
+      case _        => 260
+    }
+    secToAge(secs)
+  }
+
+  private def secToAge(sec: Int): Int = {
+    (sec.seconds / LadybugArena.movementInterval).toInt
   }
 }
 
@@ -163,9 +178,11 @@ object Ladybug {
   case class LetsMove() extends Request
 
   case class ReproductionRequest() extends Request
-  case class ReproductionResponse(gender: Gender, stage: Stage) extends Response
+  case class ReproductionResponse(gender: Gender, stage: Stage.Value) extends Response
 
   case class Movement(self: String, position: Position, state: LadybugState) extends Response
+
+  case class Annihilate() extends Request
 }
 
 class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor with LadybugBehaviour with ActorLogging {
@@ -209,6 +226,8 @@ class Ladybug(val selfId: String, val initialState: LadybugState) extends Actor 
     case ReproductionResponse(otherGender, otherStage) =>
       advanceState(state.tryBecomePregnant(otherGender, otherStage))
 
+    case Annihilate() if !Set(Stage.egg, Stage.child).contains(state.stage) =>
+      advanceState(state.copy(age = Stage.ageFromStage(Stage.dead)))
   }
 
   def handleNearbyLadybugs(state: LadybugState, nearbyLadybugs: Seq[ActorRef]) = {

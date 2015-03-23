@@ -77,9 +77,17 @@ var LadybugHandler = (function () {
   $(function () {
     var $arena = $("#arena");
     $arena.on("click", "div.ladybug", function (e) {
-      if (!e.ctrlKey) {
+      if (e.shiftKey) {
+        WS.send(JSON.stringify({
+          "kill": {
+            "id": $(this).attr("id")
+          }
+        }));
+        e.stopPropagation();
+        return false;
+      }
+      else if (!e.ctrlKey) {
         selectLadybug($(this).attr("id"));
-        //$(this).toggleClass("selected");
         e.stopPropagation();
         return false;
       }

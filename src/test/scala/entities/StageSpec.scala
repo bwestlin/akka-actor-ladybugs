@@ -23,5 +23,14 @@ class StageSpec extends WordSpec with Matchers {
       Stage.fromAge(2599) shouldBe Stage.dead
       Stage.fromAge(2600) shouldBe Stage.annihilated
     }
+
+    "give correct age from a stage" in {
+      Stage.ageFromStage(Stage.egg) shouldBe 0
+      Stage.ageFromStage(Stage.child) shouldBe 100
+      Stage.ageFromStage(Stage.adult) shouldBe 500
+      Stage.ageFromStage(Stage.old) shouldBe 2000
+      Stage.ageFromStage(Stage.dead) shouldBe 2500
+      Stage.ageFromStage(Stage.annihilated) shouldBe 2600
+    }
   }
 }

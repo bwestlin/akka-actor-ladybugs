@@ -27,6 +27,7 @@ object LadybugArena {
   sealed trait Publishes
 
   case class Spawn(maybePosition: Option[Position] = None, maybeAge: Option[Int] = None) extends Request
+  case class Kill(ladybugId: String) extends Request
   case class InitiateMovement() extends Request
   case class MovementRequest(direction: Vec2d, radius: Double) extends Request
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: Position, nearbyLadybugs: Seq[ActorRef])
@@ -193,6 +194,9 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
           spawnCounter = state.spawnCounter + 1
         )))
       }
+
+    case Kill(ladybugId) if ladybugId.startsWith("ladybug") =>
+      context.child(ladybugId).foreach(_ ! Ladybug.Annihilate())
 
     case Terminated(ladybug) if state.ladybugs.contains(ladybug) =>
       context.become(default(state.copy(
