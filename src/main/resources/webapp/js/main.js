@@ -74,37 +74,6 @@ var LadybugHandler = (function () {
 
   var selectedLadybugId;
 
-  $(function () {
-    var $arena = $("#arena");
-    $arena.on("click", "div.ladybug", function (e) {
-      if (e.shiftKey) {
-        WS.send(JSON.stringify({
-          "kill": {
-            "id": $(this).attr("id")
-          }
-        }));
-        e.stopPropagation();
-        return false;
-      }
-      else if (!e.ctrlKey) {
-        selectLadybug($(this).attr("id"));
-        e.stopPropagation();
-        return false;
-      }
-    });
-    $arena.on("click", function (e) {
-      selectLadybug();
-      if (e.ctrlKey) {
-        //console.log("e=", e);
-        WS.send(JSON.stringify({
-          "spawn": {
-            position: [e.offsetX - 4, e.offsetY - 4]
-          }
-        }));
-      }
-    });
-  });
-
   function selectLadybug(id) {
     var $arena = $("#arena");
     var $info = $("#info");
@@ -203,16 +172,108 @@ var LadybugHandler = (function () {
   setInterval(stepAnim, animSleep);
 
   return {
-    updatePosition: updatePosition
+    updatePosition: updatePosition,
+    selectLadybug: selectLadybug
   };
 }());
+
+var ArenaHandler = (function () {
+
+  var currentStones = [];
+
+  $(function () {
+    var $arena = $("#arena");
+    $arena.on("click", "div.ladybug", function (e) {
+      if (e.shiftKey) {
+        WS.send(JSON.stringify({
+          "kill": {
+            "id": $(this).attr("id")
+          }
+        }));
+        e.stopPropagation();
+        return false;
+      }
+      else if (!e.ctrlKey) {
+        LadybugHandler.selectLadybug($(this).attr("id"));
+        e.stopPropagation();
+        return false;
+      }
+    });
+    $arena.on("click", "div.stone", function (e) {
+      var idSplit = $(this).attr("id").split("_");
+      WS.send(JSON.stringify({
+        "removeStone": {
+          pos: [parseInt(idSplit[1]), parseInt(idSplit[2])]
+        }
+      }));
+      e.stopPropagation();
+      return false;
+    });
+    $arena.on("click", function (e) {
+      LadybugHandler.selectLadybug();
+      if (e.ctrlKey) {
+        WS.send(JSON.stringify({
+          "spawn": {
+            position: [e.offsetX - 4, e.offsetY - 4]
+          }
+        }));
+      }
+      else {
+        WS.send(JSON.stringify({
+          "putStone": {
+            pos: [e.offsetX - 4, e.offsetY - 4]
+          }
+        }));
+      }
+    });
+  });
+
+
+  function updateArena(updates) {
+    _.each(updates.movements || [], LadybugHandler.updatePosition);
+    updateStones(updates.stones || []);
+  }
+
+  function updateStones(stones) {
+    _.each(stones, function (stone) {
+      var $stone = $("#" + stoneId(stone));
+      if ($stone.length == 0) {
+        $stone = $('<div class="stone" id="' + stoneId(stone) + '"></div>').appendTo("#arena");
+      }
+
+      $stone
+        .css({
+          "left": parseInt(stone.pos[0]) + "px",
+          "top":  parseInt(stone.pos[1]) + "px"
+        });
+    });
+
+    // Remove no longer existing stones
+    var stonesToRemove = _.remove(currentStones, function (stone) {
+      return !_.find(stones, function (uStone) { return stone.pos[0] == uStone.pos[0] && stone.pos[1] == uStone.pos[1]; });
+    });
+    _.each(stonesToRemove, function (stone) {
+      $("#" + stoneId(stone)).remove();
+    });
+    currentStones = stones;
+  }
+
+  function stoneId(stone) {
+    return "stone_" + stone.pos[0] + "_"  + stone.pos[1];
+  }
+
+  return {
+    updateArena: updateArena
+  };
+}());
+
 
 $(function () {
 
   WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
   WS.listener(function (message) {
     var payload = JSON.parse(message);
-    _.each(payload.movements || [], LadybugHandler.updatePosition);
+    ArenaHandler.updateArena(payload);
     //console.log("numParticipants: ", payload.numParticipants);
   });
 

@@ -2,6 +2,7 @@ package ladybugs.json
 
 import ladybugs.entities.Ladybug.Movement
 import ladybugs.entities.LadybugArena.ArenaUpdates
+import ladybugs.entities.Stone
 import ladybugs.http.WebsocketConnection
 import spray.json._
 
@@ -20,8 +21,19 @@ object JsonProtocol extends DefaultJsonProtocol {
     }
   }
 
-  implicit val arenaUpdatesFormat = jsonFormat2(ArenaUpdates.apply)
+  implicit object StoneFormat extends RootJsonFormat[Stone] {
+    override def read(json: JsValue): Stone = ???
+    override def write(stone: Stone): JsValue = {
+      JsObject(Map(
+        "pos" -> JsArray(Vector(stone.pos.x, stone.pos.y).map(_.toInt).map(JsNumber.apply))
+      ))
+    }
+  }
+
+  implicit val arenaUpdatesFormat = jsonFormat3(ArenaUpdates.apply)
 
   implicit val wsCommandSpawnFormat = jsonFormat1(WebsocketConnection.Spawn)
   implicit val wsCommandKillFormat = jsonFormat1(WebsocketConnection.Kill)
+  implicit val wsCommandPutStoneFormat = jsonFormat1(WebsocketConnection.PutStone)
+  implicit val wsCommandRemoveStoneFormat = jsonFormat1(WebsocketConnection.RemoveStone)
 }

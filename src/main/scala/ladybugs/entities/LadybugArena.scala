@@ -15,6 +15,12 @@ case class Position(pos: Vec2d, radius: Double = 20) {
   }
 }
 
+object Stone {
+  val width, height = 40
+}
+
+case class Stone(pos: Vec2d)
+
 object LadybugArena {
 
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
@@ -32,11 +38,15 @@ object LadybugArena {
   case class MovementRequest(direction: Vec2d, radius: Double) extends Request
   case class MovementRequestResponse(ok: Boolean, request: MovementRequest, position: Position, nearbyLadybugs: Seq[ActorRef])
 
-  case class ArenaUpdates(movements: Set[Movement], numParticipants: Int) extends Publishes
+  case class ArenaUpdates(movements: Set[Movement], stones: Set[Stone], numParticipants: Int) extends Publishes
   case class ArenaParticipationRequest(participator: ActorRef) extends Subscribes
   case class ArenaParticipationResponse() extends Response
 
+  case class PutStone(x: Int, y: Int) extends Request
+  case class RemoveStone(x: Int, y: Int) extends Request
+
   private case class LadybugArenaState(ladybugs: Map[ActorRef, Position],
+                                       stones: Set[Stone],
                                        spawnCounter: Int,
                                        awaitingMovementsFrom: Set[ActorRef],
                                        movements: Set[Movement],
@@ -82,14 +92,46 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
   def positionBlocked(requestedPosition: Position,
                       previousPosition: Position,
-                      ladybugs: Map[ActorRef, Position]): Boolean = {
+                      ladybugs: Map[ActorRef, Position],
+                      stones: Set[Stone]): Boolean = {
 
-    ladybugs.exists { case (_, position) =>
-      val requestPositionDistance = requestedPosition.distanceTo(position)
-      val previousPositionDistance = previousPosition.distanceTo(position)
+    val anyLadybugBlocking =
+      ladybugs.exists { case (_, position) =>
+        val requestPositionDistance = requestedPosition.distanceTo(position)
+        val previousPositionDistance = previousPosition.distanceTo(position)
 
-      requestPositionDistance - requestedPosition.radius - position.radius < 0 && requestPositionDistance < previousPositionDistance
+        requestPositionDistance - requestedPosition.radius - position.radius < 0 && requestPositionDistance < previousPositionDistance
+      }
+
+    val stoneHalfW = Stone.width / 2
+    val stoneHalfH = Stone.height / 2
+
+    def stoneDistanceSquared(stone: Stone, pos: Vec2d) = {
+      val closestX =
+        if (pos.x < stone.pos.x - stoneHalfW) stone.pos.x - stoneHalfW
+        else if (pos.x > stone.pos.x + stoneHalfW) stone.pos.x + stoneHalfW
+        else pos.x
+      val closestY =
+        if (pos.y < stone.pos.y - stoneHalfH) stone.pos.y - stoneHalfH
+        else if (pos.y > stone.pos.y + stoneHalfH) stone.pos.y + stoneHalfH
+        else pos.y
+
+      val distanceX = pos.x - closestX
+      val distanceY = pos.y - closestY
+
+      (distanceX * distanceX) + (distanceY * distanceY)
     }
+
+    val anyStoneBlocking =
+      stones.exists { stone =>
+        val requestedDistanceSquared = stoneDistanceSquared(stone, requestedPosition.pos)
+        val previousDistanceSquared = stoneDistanceSquared(stone, previousPosition.pos)
+
+        requestedDistanceSquared < (requestedPosition.radius * requestedPosition.radius) &&
+          requestedDistanceSquared < previousDistanceSquared
+      }
+
+    anyLadybugBlocking || anyStoneBlocking
   }
 
   def adjustPositionIfOverlapped(requestedPosition: Position, ladybugs: Map[ActorRef, Position]) = {
@@ -122,12 +164,16 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
+  def stonePos(x: Int, y: Int): (Int, Int) = {
+    (x - (x % Stone.width) + Stone.width / 2, y - (y % Stone.height) + Stone.height / 2)
+  }
+
   private def advanceState(state: LadybugArenaState): LadybugArenaState = {
     context.become(default(state))
     state
   }
 
-  def receive = default(LadybugArenaState(Map.empty, 0, Set.empty, Set.empty, Set.empty))
+  def receive = default(LadybugArenaState(Map.empty, Set.empty, 0, Set.empty, Set.empty, Set.empty))
 
   def default(state: LadybugArenaState): Receive = {
 
@@ -150,7 +196,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         val otherLadybugs = state.ladybugs - sender()
         val ok =
           movementWithinBounds(requestedPosition, position) &&
-          !positionBlocked(requestedPosition, position, otherLadybugs)
+          !positionBlocked(requestedPosition, position, otherLadybugs, state.stones)
 
         val nextPosition =
           if (ok) requestedPosition
@@ -170,7 +216,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
 
       if (restAwaitingMovementsFrom.isEmpty) {
         context.system.eventStream.publish(
-          ArenaUpdates(state.movements + movement, state.participants.size)
+          ArenaUpdates(state.movements + movement, state.stones, state.participants.size)
         )
         advanceState(state.copy(
           awaitingMovementsFrom = restAwaitingMovementsFrom,
@@ -221,5 +267,16 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
         participants = state.participants - participator
       ))
 
+    case PutStone(x, y) =>
+      val (stoneX, stoneY) = stonePos(x, y)
+      if (stoneX > 0 && stoneX <= width && stoneY > 0 && stoneY <= height) {
+        val stone = Stone(Vec2d(stoneX, stoneY))
+        val nextState = advanceState(state.copy(stones = state.stones + stone))
+      }
+
+    case RemoveStone(x, y) =>
+      val (stoneX, stoneY) = stonePos(x, y)
+      val stone = Stone(Vec2d(stoneX, stoneY))
+      advanceState(state.copy(stones = state.stones - stone))
   }
 }

@@ -15,6 +15,8 @@ object WebsocketConnection {
   case class NoCommand(debug: String) extends Command
   case class Spawn(position: Seq[Int]) extends Command
   case class Kill(id: String) extends Command
+  case class PutStone(pos: Seq[Int]) extends Command
+  case class RemoveStone(pos: Seq[Int]) extends Command
 }
 
 class WebsocketConnection extends Actor with ActorLogging {
@@ -42,6 +44,10 @@ class WebsocketConnection extends Actor with ActorLogging {
           arenaRef ! LadybugArena.Spawn(Some(Position(Vec2d(position(0), position(1)))), Some(100))
         case Kill(id) =>
           arenaRef ! LadybugArena.Kill(id)
+        case PutStone(pos) =>
+          arenaRef ! LadybugArena.PutStone(pos(0), pos(1))
+        case RemoveStone(pos) =>
+          arenaRef ! LadybugArena.RemoveStone(pos(0), pos(1))
         case NoCommand(debug) =>
           log.info(s"Unknown command: $debug")
       }
@@ -50,6 +56,8 @@ class WebsocketConnection extends Actor with ActorLogging {
   def parseCommand(name: String, jsValue: JsValue): Command = name match {
     case "spawn" => jsValue.convertTo[Spawn]
     case "kill" => jsValue.convertTo[Kill]
+    case "putStone" => jsValue.convertTo[PutStone]
+    case "removeStone" => jsValue.convertTo[RemoveStone]
     case _ => NoCommand(s"$name: $jsValue")
   }
 }
