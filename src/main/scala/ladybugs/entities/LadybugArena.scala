@@ -122,7 +122,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
     }.keys.toSeq
   }
 
-  def advanceState(state: LadybugArenaState): LadybugArenaState = {
+  private def advanceState(state: LadybugArenaState): LadybugArenaState = {
     context.become(default(state))
     state
   }
