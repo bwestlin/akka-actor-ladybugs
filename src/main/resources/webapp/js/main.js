@@ -299,3 +299,18 @@ $(function () {
   setTimeout(f, 100);
   */
 });
+
+$(function () {
+  function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+          results = regex.exec(location.search);
+      return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+
+  if (getParameterByName("inline") === "true") {
+    $("h1, p").hide();
+    $("#container").addClass("inline");
+  }
+  $("body").show();
+});

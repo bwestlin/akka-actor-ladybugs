@@ -1,5 +1,6 @@
 body {
   background-color: #FFFFFF;
+  display: none;
 }
 
 h1 {
@@ -17,6 +18,11 @@ h1 a.akka {
   width: 868px;
   margin: 20px auto;
 }
+
+#container.inline {
+  margin: 0;
+}
+
 
 #container > h1,
 #container > p {
