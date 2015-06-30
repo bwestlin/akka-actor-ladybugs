@@ -49,6 +49,9 @@ h1 a.akka {
   border: #2e6125 solid 4px;
   border-radius: 15px;
   box-shadow: 5px 5px 10px rgba(255, 255, 255, .5), -5px -5px 10px rgba(33, 70, 22, .5);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .ladybug {
