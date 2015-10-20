@@ -74,6 +74,10 @@ var LadybugHandler = (function () {
 
   var selectedLadybugId;
 
+  function hasSelectedLadybug() {
+    return !!selectedLadybugId;
+  }
+
   function selectLadybug(id) {
     var $arena = $("#arena");
     var $info = $("#info");
@@ -173,6 +177,7 @@ var LadybugHandler = (function () {
 
   return {
     updatePosition: updatePosition,
+    hasSelectedLadybug: hasSelectedLadybug,
     selectLadybug: selectLadybug
   };
 }());
@@ -210,7 +215,10 @@ var ArenaHandler = (function () {
       return false;
     });
     $arena.on("click", function (e) {
+      var hadSelectedLadyBug = LadybugHandler.hasSelectedLadybug();
       LadybugHandler.selectLadybug();
+      if (hadSelectedLadyBug) return;
+
       if (e.ctrlKey) {
         WS.send(JSON.stringify({
           "spawn": {
