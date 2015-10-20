@@ -36,6 +36,7 @@ h1 a.akka {
 #arena-fence {
   background-image: url('/images/bg.png');
   padding: 30px;
+  padding-bottom: 40px;
   border: none;
   border-radius: 30px;
   box-shadow: 5px 5px 10px rgba(255, 255, 255, .5) inset, -5px -5px 10px rgba(33, 70, 22, .5) inset, 2px 2px 4px rgba(33, 70, 22, .20);
@@ -52,6 +53,14 @@ h1 a.akka {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+#info {
+  position: absolute;
+  bottom: -30px;
+  width: 100%;
+  color: white;
+  text-shadow: 0 0 5px black;
 }
 
 .ladybug {
@@ -139,7 +148,7 @@ h1 a.akka {
   background-position: inherit;
 }
 
-#info {
+#infoPopup {
   background-color: beige;
   border: 2px solid #d4d4bd;
   border-radius: 10px;
@@ -150,13 +159,4 @@ h1 a.akka {
   left: 10px;
   pointer-events: none;
   font-size: 70%;
-}
-
-#msgsPerSec {
-  color: white;
-  text-shadow: 0 0 5px black;
-  font-weight: bold;
-  position: absolute;
-  top: 10px;
-  left: 10px;
 }

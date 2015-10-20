@@ -85,30 +85,30 @@ var LadybugHandler = (function () {
 
   function selectLadybug(id) {
     var $arena = $("#arena");
-    var $info = $("#info");
+    var $infoPopup = $("#infoPopup");
     if (selectedLadybugId) {
       $arena.find("#" + selectedLadybugId).removeClass("selected");
       selectedLadybugId = null;
-      $info.hide();
+      $infoPopup.hide();
     }
 
     if (id) {
-      if ($info.length == 0) {
-        $info = $('<div id="info"></div>');
+      if ($infoPopup.length == 0) {
+        $infoPopup = $('<div id="infoPopup"></div>');
       }
 
       selectedLadybugId = id;
-      $arena.find("#" + selectedLadybugId).addClass("selected").append($info);
-      $info.show();
+      $arena.find("#" + selectedLadybugId).addClass("selected").append($infoPopup);
+      $infoPopup.show();
     }
   }
 
   function updateSelectedInfo(ladybug) {
     if (selectedLadybugId === ladybug.id) {
-      var $info = $("#info");
+      var $infoPopup = $("#infoPopup");
 
       var json = JSON.stringify(ladybug, null, ' ')
-      $info.html("<pre>" + json + "</pre>");
+      $infoPopup.html("<pre>" + json + "</pre>");
     }
   }
 
@@ -280,6 +280,36 @@ var ArenaHandler = (function () {
   };
 }());
 
+var InfoHandler = (function () {
+
+  var msgsPerSec = 0;
+
+  var nextUpdate;
+
+  function updateMsgsPerSec(m) {
+    msgsPerSec = m;
+  }
+
+  function trigger(f) {
+    return function () {
+      f.apply(this, arguments);
+      if (!nextUpdate) nextUpdate = setTimeout(update, 100);
+    };
+  }
+
+  function update() {
+    var $info = $("#info");
+    $info.html(
+      '<b>' + msgsPerSec + '</b> msgs/s'
+    );
+    nextUpdate = undefined;
+  }
+
+  return {
+    updateMsgsPerSec: trigger(updateMsgsPerSec)
+  };
+}());
+
 
 $(function () {
 
@@ -291,7 +321,8 @@ $(function () {
   });
 
   WS.listener(InvokeCounter.counterFunction(1000, function (count) {
-    $("#msgsPerSec").text(count + " msgs/s");
+    //$("#msgsPerSec").text(count + " msgs/s");
+    InfoHandler.updateMsgsPerSec(count);
   }));
 
   /*
