@@ -44,7 +44,7 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
 
     case websocket.UpgradedToWebSocket =>
       if (context.children.isEmpty)
-        context.actorOf(WebsocketConnection.props())
+        context.actorOf(WSConnection.props())
 
     case PushWS(msg) => send(TextFrame(msg))
 

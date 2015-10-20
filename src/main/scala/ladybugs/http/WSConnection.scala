@@ -8,8 +8,8 @@ import spray.can.websocket.frame.TextFrame
 import spray.json._
 
 
-object WebsocketConnection {
-  def props() = Props(classOf[WebsocketConnection])
+object WSConnection {
+  def props() = Props(classOf[WSConnection])
 
   sealed trait Command
   case class NoCommand(debug: String) extends Command
@@ -19,9 +19,9 @@ object WebsocketConnection {
   case class RemoveStone(pos: Seq[Int]) extends Command
 }
 
-class WebsocketConnection extends Actor with ActorLogging {
+class WSConnection extends Actor with ActorLogging {
 
-  import ladybugs.http.WebsocketConnection._
+  import ladybugs.http.WSConnection._
 
   context.system.eventStream.publish(LadybugArena.ArenaParticipationRequest(self))
 

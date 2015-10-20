@@ -3,7 +3,7 @@ package ladybugs.json
 import ladybugs.entities.Ladybug.Movement
 import ladybugs.entities.LadybugArena.ArenaUpdates
 import ladybugs.entities.Stone
-import ladybugs.http.WebsocketConnection
+import ladybugs.http.WSConnection
 import spray.json._
 
 object JsonProtocol extends DefaultJsonProtocol {
@@ -32,8 +32,8 @@ object JsonProtocol extends DefaultJsonProtocol {
 
   implicit val arenaUpdatesFormat = jsonFormat3(ArenaUpdates.apply)
 
-  implicit val wsCommandSpawnFormat = jsonFormat1(WebsocketConnection.Spawn)
-  implicit val wsCommandKillFormat = jsonFormat1(WebsocketConnection.Kill)
-  implicit val wsCommandPutStoneFormat = jsonFormat1(WebsocketConnection.PutStone)
-  implicit val wsCommandRemoveStoneFormat = jsonFormat1(WebsocketConnection.RemoveStone)
+  implicit val wsCommandSpawnFormat = jsonFormat1(WSConnection.Spawn)
+  implicit val wsCommandKillFormat = jsonFormat1(WSConnection.Kill)
+  implicit val wsCommandPutStoneFormat = jsonFormat1(WSConnection.PutStone)
+  implicit val wsCommandRemoveStoneFormat = jsonFormat1(WSConnection.RemoveStone)
 }

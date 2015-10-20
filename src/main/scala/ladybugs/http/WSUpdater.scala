@@ -6,11 +6,11 @@ import ladybugs.entities.LadybugArena.ArenaUpdates
 import ladybugs.json.JsonProtocol._
 import spray.json._
 
-object WebsocketUpdater {
-  def props() = Props(classOf[WebsocketUpdater])
+object WSUpdater {
+  def props() = Props(classOf[WSUpdater])
 }
 
-class WebsocketUpdater extends Actor with ActorLogging {
+class WSUpdater extends Actor with ActorLogging {
 
   context.system.eventStream.subscribe(self, classOf[LadybugArena.ArenaUpdates])
 
