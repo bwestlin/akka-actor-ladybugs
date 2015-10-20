@@ -6,7 +6,7 @@ var WS = (function () {
   var listeners = [];
 
   function onOpen(e) {
-    console.log("WS.onOpen");
+    console.log("WS.onOpen", e);
     isOpen = true;
     for (i in pendingMessages) ws.send(pendingMessages[i]);
   }
@@ -16,10 +16,15 @@ var WS = (function () {
     //console.log("WS.onMessage data:", data);
     for (var i in listeners) listeners[i](e.data);
   }
+
+  function onClose(e) {
+    console.log("WS.onClose", e);
+  }
   function connect(url) {
     ws = new WebSocket(url);
     ws.onmessage = onMessage;
     ws.onopen = onOpen;
+    ws.onclose = onClose;
   }
   function disconnect() {
     console.log("WS.disconnect");
