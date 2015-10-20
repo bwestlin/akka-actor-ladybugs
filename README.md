@@ -35,11 +35,18 @@ It can be seen live right now by browsing to: [http://ladybugs.herokuapp.com/]()
 ## Running ##
                                                                                                                                                                                                                       
 The easiest way to run this application is with the following command in the base directory:                                                                                                                                    
-```                                                                                                                                                                                                                                
+```
 ./activator run
 ```                                                                                                                                                                                                                                
-After this it can be accessed from a web browser at **http://localhost:8080/**.                                                              
-                                                                                                                                                                                                                                   
+After this it can be accessed from a web browser at **http://localhost:8080/**.
+
+To run in development mode use:
+```
+./activator ~re-start
+```
+This will run it in such a way that it will recompile and restart upon changes thanks to
+[sbt-revolver](https://github.com/spray/sbt-revolver).
+
 
 ## Licence ##
 
