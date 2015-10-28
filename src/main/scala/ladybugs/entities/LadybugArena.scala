@@ -4,7 +4,6 @@ import akka.actor._
 import ladybugs.calculation.Vec2d
 import ladybugs.entities.Ladybug.Movement
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -54,8 +53,8 @@ object LadybugArena {
 }
 
 class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogging {
-
   import ladybugs.entities.LadybugArena._
+  import context.dispatcher
 
   val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
 
