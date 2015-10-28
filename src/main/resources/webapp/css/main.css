@@ -60,7 +60,11 @@ h1 a.akka {
   bottom: -30px;
   width: 100%;
   color: white;
-  text-shadow: 0 0 5px black;
+  text-shadow: 0 0 10px #2e6125, 0 0 4px #2e6125, 0 0 1px #2e6125;
+}
+
+#info > span {
+  margin-right: 20px;
 }
 
 .ladybug {

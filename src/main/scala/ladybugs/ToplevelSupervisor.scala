@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.io.IO
 import ladybugs.entities.LadybugArena
 import ladybugs.entities.LadybugArena.Spawn
-import ladybugs.http.{HttpServer, WSUpdater}
+import ladybugs.http.{WSStats, HttpServer, WSUpdater}
 import spray.can.Http
 import spray.can.server.UHttp
 
@@ -15,7 +15,9 @@ class ToplevelSupervisor extends Actor {
 
   implicit val system = context.system
 
-  val server = context.actorOf(HttpServer.props(), "http")
+  val wsStats = context.actorOf(WSStats.props())
+
+  val server = context.actorOf(HttpServer.props(wsStats), "http")
 
   val port = Option(System.getProperty("http.port")).map(_.toInt).getOrElse(8080)
 

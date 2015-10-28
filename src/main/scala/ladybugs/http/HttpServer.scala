@@ -1,6 +1,7 @@
 package ladybugs.http
 
 import akka.actor._
+import ladybugs.http.WSStats.RegisterConnection
 import spray.can.websocket.FrameCommandFailed
 import spray.can.websocket.frame.TextFrame
 import spray.can.{Http, websocket}
@@ -11,25 +12,28 @@ final case class PushWS(msg: String)
 final case class BroadcastWS(msg: String)
 
 object HttpServer {
-  def props() = Props(classOf[HttpServer])
+  def props(wsStats: ActorRef) = Props(classOf[HttpServer], wsStats)
 }
 
-class HttpServer extends Actor with ActorLogging {
+class HttpServer(wsStats: ActorRef) extends Actor with ActorLogging {
 
   def receive = {
     // when a new connection comes in we register a WebSocketConnection actor as the per connection handler
     case Http.Connected(remoteAddress, localAddress) =>
       val serverConnection = sender()
-      val conn = context.actorOf(HttpWorker.props(serverConnection))
+      val conn = context.actorOf(HttpWorker.props(serverConnection, wsStats))
       serverConnection ! Http.Register(conn)
   }
 }
 
 object HttpWorker {
-  def props(serverConnection: ActorRef) = Props(classOf[HttpWorker], serverConnection)
+  def props(serverConnection: ActorRef, wsConnectionCounter: ActorRef) =
+    Props(classOf[HttpWorker], serverConnection, wsConnectionCounter)
 }
 
-class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with websocket.WebSocketServerWorker {
+class HttpWorker(val serverConnection: ActorRef, wsConnectionCounter: ActorRef)
+  extends HttpServiceActor
+  with websocket.WebSocketServerWorker {
 
   context.system.eventStream.subscribe(self, classOf[BroadcastWS])
 
@@ -43,8 +47,10 @@ class HttpWorker(val serverConnection: ActorRef) extends HttpServiceActor with w
   def businessLogic: Receive = {
 
     case websocket.UpgradedToWebSocket =>
-      if (context.children.isEmpty)
-        context.actorOf(WSConnection.props())
+      if (context.children.isEmpty) {
+        val wsConnection = context.actorOf(WSConnection.props())
+        wsConnectionCounter ! RegisterConnection(wsConnection)
+      }
 
     case PushWS(msg) => send(TextFrame(msg))
 

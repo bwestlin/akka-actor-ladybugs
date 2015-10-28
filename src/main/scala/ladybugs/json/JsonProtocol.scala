@@ -4,6 +4,7 @@ import ladybugs.entities.Ladybug.Movement
 import ladybugs.entities.LadybugArena.ArenaUpdates
 import ladybugs.entities.Stone
 import ladybugs.http.WSConnection
+import ladybugs.http.WSStats.StatsUpdates
 import spray.json._
 
 object JsonProtocol extends DefaultJsonProtocol {
@@ -30,7 +31,10 @@ object JsonProtocol extends DefaultJsonProtocol {
     }
   }
 
+  implicit val serverMessageFormat = jsonFormat2(ServerMessage.apply)
+
   implicit val arenaUpdatesFormat = jsonFormat3(ArenaUpdates.apply)
+  implicit val statsUpdatesFormat = jsonFormat1(StatsUpdates.apply)
 
   implicit val wsCommandSpawnFormat = jsonFormat1(WSConnection.Spawn)
   implicit val wsCommandKillFormat = jsonFormat1(WSConnection.Kill)

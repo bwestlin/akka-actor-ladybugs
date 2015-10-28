@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import ladybugs.entities.LadybugArena
 import ladybugs.entities.LadybugArena.ArenaUpdates
 import ladybugs.json.JsonProtocol._
+import ladybugs.json.ServerMessage
 import spray.json._
 
 object WSUpdater {
@@ -13,6 +14,7 @@ object WSUpdater {
 class WSUpdater extends Actor with ActorLogging {
 
   context.system.eventStream.subscribe(self, classOf[LadybugArena.ArenaUpdates])
+  context.system.eventStream.subscribe(self, classOf[WSStats.StatsUpdates])
 
   override def postStop(): Unit = {
     super.postStop()
@@ -21,6 +23,14 @@ class WSUpdater extends Actor with ActorLogging {
 
   def receive = {
     case au: ArenaUpdates =>
-      context.system.eventStream.publish(BroadcastWS(au.toJson.toString()))
+      publishUpdate("arena", au)
+    case su: WSStats.StatsUpdates =>
+      publishUpdate("stats", su)
+  }
+
+  def publishUpdate[T : JsonWriter](msgType: String, payload: T) = {
+    context.system.eventStream.publish(
+      BroadcastWS(ServerMessage.jsonPayload(msgType, payload).toString())
+    )
   }
 }

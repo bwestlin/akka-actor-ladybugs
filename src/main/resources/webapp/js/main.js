@@ -283,6 +283,7 @@ var ArenaHandler = (function () {
 var InfoHandler = (function () {
 
   var msgsPerSec = 0;
+  var serverStats = {};
 
   var nextUpdate;
 
@@ -290,34 +291,47 @@ var InfoHandler = (function () {
     msgsPerSec = m;
   }
 
+  function updateServerStats(ss) {
+    serverStats = ss;
+  }
+
   function trigger(f) {
     return function () {
       f.apply(this, arguments);
-      if (!nextUpdate) nextUpdate = setTimeout(update, 100);
+      if (!nextUpdate) nextUpdate = setTimeout(update, 0);
     };
   }
 
   function update() {
     var $info = $("#info");
     $info.html(
-      '<b>' + msgsPerSec + '</b> msgs/s'
+      '<span><b>' + msgsPerSec + '</b> websocket msgs/s</span>' +
+      '<span><b>' + ((serverStats.numConnections || 1) - 1) + '</b> other websockets are connected</span>'
     );
     nextUpdate = undefined;
   }
 
   return {
-    updateMsgsPerSec: trigger(updateMsgsPerSec)
+    updateMsgsPerSec: trigger(updateMsgsPerSec),
+    updateServerStats: trigger(updateServerStats)
   };
 }());
 
 
 $(function () {
 
+  var messageHandlers = {
+    "arena": ArenaHandler.updateArena,
+    "stats": InfoHandler.updateServerStats
+  };
+
   WS.connect("ws://" + location.hostname + (location.port ? ":" + location.port : "") + "/");
-  WS.listener(function (message) {
-    var payload = JSON.parse(message);
-    ArenaHandler.updateArena(payload);
-    //console.log("numParticipants: ", payload.numParticipants);
+  WS.listener(function (rawMessage) {
+    var message = JSON.parse(rawMessage);
+
+    var handler = messageHandlers[message.type];
+    if (handler) handler(message.payload);
+    else console.error("Unknown WS message:", message);
   });
 
   WS.listener(InvokeCounter.counterFunction(1000, function (count) {
