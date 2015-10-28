@@ -24,7 +24,7 @@ object LadybugArena {
 
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
-  val movementInterval = 100.milliseconds
+  final val MovementInterval = 100.milliseconds
 
   sealed trait Request
   sealed trait Response
@@ -56,7 +56,7 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
   import ladybugs.entities.LadybugArena._
   import context.dispatcher
 
-  val mover = context.system.scheduler.schedule(movementInterval, movementInterval, self, InitiateMovement())
+  val mover = context.system.scheduler.schedule(MovementInterval, MovementInterval, self, InitiateMovement())
 
   context.system.eventStream.subscribe(self, classOf[ArenaParticipationRequest])
 

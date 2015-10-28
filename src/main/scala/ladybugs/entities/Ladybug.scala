@@ -17,7 +17,7 @@ object Stage extends Enumeration {
   val egg, child, adult, old, dead, annihilated = Value
 
   def fromAge(age: Int) = {
-    val ageDuration = LadybugArena.movementInterval * age
+    val ageDuration = LadybugArena.MovementInterval * age
 
     if (ageDuration < 10.seconds) egg
     else if (ageDuration < 50.seconds) child
@@ -40,7 +40,7 @@ object Stage extends Enumeration {
   }
 
   private def secToAge(sec: Int): Int = {
-    (sec.seconds / LadybugArena.movementInterval).toInt
+    (sec.seconds / LadybugArena.MovementInterval).toInt
   }
 }
 
