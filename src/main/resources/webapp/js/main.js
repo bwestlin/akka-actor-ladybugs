@@ -243,8 +243,12 @@ var ArenaHandler = (function () {
 
 
   function updateArena(updates) {
-    _.each(updates.movements || [], LadybugHandler.updatePosition);
-    updateStones(updates.stones || []);
+    var movements = updates.movements || [];
+    _.each(movements, LadybugHandler.updatePosition);
+    InfoHandler.updateNumLadybugs(movements.length);
+    var stones = updates.stones || [];
+    updateStones(stones);
+    InfoHandler.updateNumStones(stones.length);
   }
 
   function updateStones(stones) {
@@ -283,12 +287,22 @@ var ArenaHandler = (function () {
 var InfoHandler = (function () {
 
   var msgsPerSec = 0;
+  var numLadybugs = 0;
+  var numStones = 0;
   var serverStats = {};
 
   var nextUpdate;
 
   function updateMsgsPerSec(m) {
     msgsPerSec = m;
+  }
+
+  function updateNumLadybugs(num) {
+    numLadybugs = num;
+  }
+
+  function updateNumStones(num) {
+    numStones = num;
   }
 
   function updateServerStats(ss) {
@@ -305,14 +319,18 @@ var InfoHandler = (function () {
   function update() {
     var $info = $("#info");
     $info.html(
-      '<span><b>' + msgsPerSec + '</b> websocket msgs/s</span>' +
-      '<span><b>' + ((serverStats.numConnections || 1) - 1) + '</b> other websockets are connected</span>'
+      '<span><b>' + numLadybugs + '</b> ladybugs</span>' +
+      '<span><b>' + numStones + '</b> stones</span>' +
+      '<span><b>' + msgsPerSec + '</b> msgs/s</span>' +
+      '<span><b>' + ((serverStats.numConnections || 1) - 1) + '</b> other ws connections</span>'
     );
     nextUpdate = undefined;
   }
 
   return {
     updateMsgsPerSec: trigger(updateMsgsPerSec),
+    updateNumLadybugs: trigger(updateNumLadybugs),
+    updateNumStones: trigger(updateNumStones),
     updateServerStats: trigger(updateServerStats)
   };
 }());
