@@ -25,6 +25,7 @@ object LadybugArena {
   def props(width: Int, height: Int) = Props(classOf[LadybugArena], width, height)
 
   final val MovementInterval = 100.milliseconds
+  final val SpawnerInterval = 5.second
 
   sealed trait Request
   sealed trait Response
@@ -44,6 +45,8 @@ object LadybugArena {
   case class PutStone(x: Int, y: Int) extends Request
   case class RemoveStone(x: Int, y: Int) extends Request
 
+  case class SpawnIfLessThan(num: Int) extends Request
+
   private case class LadybugArenaState(ladybugs: Map[ActorRef, Position],
                                        stones: Set[Stone],
                                        spawnCounter: Int,
@@ -57,12 +60,14 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
   import context.dispatcher
 
   val mover = context.system.scheduler.schedule(MovementInterval, MovementInterval, self, InitiateMovement())
+  val spawner = context.system.scheduler.schedule(SpawnerInterval, SpawnerInterval, self, SpawnIfLessThan(10))
 
   context.system.eventStream.subscribe(self, classOf[ArenaParticipationRequest])
 
   override def postStop(): Unit = {
     super.postStop()
     mover.cancel()
+    spawner.cancel()
     context.system.eventStream.unsubscribe(self)
   }
 
@@ -277,5 +282,8 @@ class LadybugArena(val width: Int, val height: Int) extends Actor with ActorLogg
       val (stoneX, stoneY) = stonePos(x, y)
       val stone = Stone(Vec2d(stoneX, stoneY))
       advanceState(state.copy(stones = state.stones - stone))
+
+    case SpawnIfLessThan(num) =>
+      if (state.ladybugs.size < num) self ! Spawn()
   }
 }
