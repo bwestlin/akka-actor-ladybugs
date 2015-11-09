@@ -19,11 +19,6 @@ h1 a.akka {
   margin: 20px auto;
 }
 
-#container.inline {
-  margin: 0;
-}
-
-
 #container > h1,
 #container > p {
   margin-left: 30px;
@@ -208,4 +203,29 @@ h1 a.akka {
   left: 10px;
   pointer-events: none;
   font-size: 70%;
+}
+
+#footer {
+  color: #606060;
+  font-size: 80%;
+  text-align: right;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+#github {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+}
+
+.inline #container {
+  margin: 0;
+}
+
+.inline h1,
+.inline p,
+.inline #footer,
+.inline #github {
+  display: none;
 }

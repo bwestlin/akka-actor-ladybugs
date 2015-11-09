@@ -386,8 +386,7 @@ $(function () {
   }
 
   if (getParameterByName("inline") === "true") {
-    $("h1, p").hide();
-    $("#container").addClass("inline");
+    $("body").addClass("inline");
   }
   $("body").show();
 });
