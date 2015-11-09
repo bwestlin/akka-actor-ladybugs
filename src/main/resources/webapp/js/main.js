@@ -322,7 +322,8 @@ var InfoHandler = (function () {
       '<span><b>' + numLadybugs + '</b> ladybugs</span>' +
       '<span><b>' + numStones + '</b> stones</span>' +
       '<span><b>' + msgsPerSec + '</b> msgs/s</span>' +
-      '<span><b>' + ((serverStats.numConnections || 1) - 1) + '</b> other ws connections</span>'
+      '<span><b>' + ((serverStats.numConnections || 1) - 1) + '</b> other ws connections</span>' +
+      '<span><b>' + ((serverStats.upTime || 0) - 1) + '</b> seconds uptime</span>'
     );
     nextUpdate = undefined;
   }

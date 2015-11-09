@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"   %% "akka-slf4j"       % "2.3.9",
   "io.spray"            %% "spray-json"       % "1.3.1",
   "com.wandoulabs.akka" %% "spray-websocket"  % "0.1.4" withSources(),
+  "joda-time"           %  "joda-time"        % "2.9",
   "org.webjars"         %  "normalize.css"    % "3.0.2",
   "org.webjars"         %  "jquery"           % "2.1.1",
   "org.webjars"         %  "lodash"           % "2.4.1-6",

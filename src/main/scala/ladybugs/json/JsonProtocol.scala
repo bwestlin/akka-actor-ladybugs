@@ -34,7 +34,7 @@ object JsonProtocol extends DefaultJsonProtocol {
   implicit val serverMessageFormat = jsonFormat2(ServerMessage.apply)
 
   implicit val arenaUpdatesFormat = jsonFormat3(ArenaUpdates.apply)
-  implicit val statsUpdatesFormat = jsonFormat1(StatsUpdates.apply)
+  implicit val statsUpdatesFormat = jsonFormat2(StatsUpdates.apply)
 
   implicit val wsCommandSpawnFormat = jsonFormat1(WSConnection.Spawn)
   implicit val wsCommandKillFormat = jsonFormat1(WSConnection.Kill)
