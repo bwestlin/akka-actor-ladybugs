@@ -29,7 +29,7 @@ state in real-time through a [websocket](http://en.wikipedia.org/wiki/WebSocket)
 This project is currently a work in progress. It's not feature complete compared to the original, but will be
 eventually.
  
-It can be seen live right now by browsing to: [http://ladybugs.herokuapp.com/]()  
+It can be seen live right now by browsing to: [http://ladybugs.herokuapp.com/](http://ladybugs.herokuapp.com/)  
 
                                                                                                                                                                                                                                    
 ## Running ##
